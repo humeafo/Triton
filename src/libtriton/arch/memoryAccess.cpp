@@ -5,10 +5,9 @@
 **  This program is under the terms of the BSD License.
 */
 
-#include <api.hpp>
-#include <cpuSize.hpp>
-#include <exceptions.hpp>
-#include <memoryAccess.hpp>
+#include <triton/cpuSize.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/memoryAccess.hpp>
 
 
 
@@ -16,31 +15,37 @@ namespace triton {
   namespace arch {
 
     MemoryAccess::MemoryAccess() {
-      this->address       = 0;
-      this->ast           = nullptr;
-      this->concreteValue = 0;
-      this->trusted       = false;
-      this->pcRelative    = 0;
+      this->address              = 0;
+      this->concreteValue        = 0;
+      this->concreteValueDefined = false;
+      this->leaAst               = nullptr;
+      this->pcRelative           = 0;
     }
 
 
-    MemoryAccess::MemoryAccess(triton::uint64 address, triton::uint32 size /* bytes */, triton::uint512 concreteValue) {
-      this->address       = address;
-      this->ast           = nullptr;
-      this->concreteValue = concreteValue;
-      this->trusted       = true;
-      this->pcRelative    = 0;
+    MemoryAccess::MemoryAccess(triton::uint64 address, triton::uint32 size /* bytes */)
+      : MemoryAccess() {
+      this->address = address;
 
       if (size == 0)
         throw triton::exceptions::MemoryAccess("MemoryAccess::MemoryAccess(): size cannot be zero.");
 
-      if (size != BYTE_SIZE && size != WORD_SIZE && size != DWORD_SIZE && size != QWORD_SIZE && size != DQWORD_SIZE && size != QQWORD_SIZE && size != DQQWORD_SIZE)
+      if (size != BYTE_SIZE     &&
+          size != WORD_SIZE     &&
+          size != DWORD_SIZE    &&
+          size != QWORD_SIZE    &&
+          size != DQWORD_SIZE   &&
+          size != QQWORD_SIZE   &&
+          size != DQQWORD_SIZE)
         throw triton::exceptions::MemoryAccess("MemoryAccess::MemoryAccess(): size must be aligned.");
 
       this->setPair(std::make_pair(((size * BYTE_SIZE_BIT) - 1), 0));
+    }
 
-      if (concreteValue > this->getMaxValue())
-        throw triton::exceptions::MemoryAccess("MemoryAccess::MemoryAccess(): You cannot set this concrete value (too big) to this memory access.");
+
+    MemoryAccess::MemoryAccess(triton::uint64 address, triton::uint32 size /* bytes */, triton::uint512 concreteValue)
+      : MemoryAccess(address, size) {
+      this->setConcreteValue(concreteValue);
     }
 
 
@@ -69,99 +74,7 @@ namespace triton {
 
 
     triton::ast::AbstractNode* MemoryAccess::getLeaAst(void) const {
-      return this->ast;
-    }
-
-
-    triton::uint64 MemoryAccess::getBaseValue(void) {
-      if (this->pcRelative)
-        return this->pcRelative;
-
-      else if (this->baseReg.isValid())
-        return triton::api.getConcreteRegisterValue(this->baseReg).convert_to<triton::uint64>();
-
-      return 0;
-    }
-
-
-    triton::uint64 MemoryAccess::getIndexValue(void) {
-      if (this->indexReg.isValid())
-        return triton::api.getConcreteRegisterValue(this->indexReg).convert_to<triton::uint64>();
-      return 0;
-    }
-
-
-    triton::uint64 MemoryAccess::getSegmentValue(void) {
-      if (this->segmentReg.isValid())
-        return triton::api.getConcreteRegisterValue(this->segmentReg).convert_to<triton::uint64>();
-      return 0;
-    }
-
-
-    triton::uint64 MemoryAccess::getScaleValue(void) {
-      return this->scale.getValue();
-    }
-
-
-    triton::uint64 MemoryAccess::getDisplacementValue(void) {
-      return this->displacement.getValue();
-    }
-
-
-    triton::uint64 MemoryAccess::getAccessMask(void) {
-      triton::uint64 mask = -1;
-      return (mask >> (QWORD_SIZE_BIT - triton::api.cpuRegisterBitSize()));
-    }
-
-
-    triton::uint32 MemoryAccess::getAccessSize(void) {
-      if (this->indexReg.isValid())
-        return this->indexReg.getBitSize();
-
-      else if (this->baseReg.isValid())
-        return this->baseReg.getBitSize();
-
-      else if (this->displacement.getBitSize())
-        return this->displacement.getBitSize();
-
-      return triton::api.cpuRegisterBitSize();
-    }
-
-
-    void MemoryAccess::initAddress(void) {
-      /* Otherwise, try to compute the address */
-      if (triton::api.isArchitectureValid() && this->getBitSize() >= BYTE_SIZE_BIT) {
-        triton::arch::Register& base  = this->baseReg;
-        triton::arch::Register& index = this->indexReg;
-        triton::uint64 segmentValue   = this->getSegmentValue();
-        triton::uint64 scaleValue     = this->getScaleValue();
-        triton::uint64 dispValue      = this->getDisplacementValue();
-        triton::uint32 bitSize        = this->getAccessSize();
-
-        /* Initialize the AST of the memory access (LEA) */
-        this->ast = triton::ast::bvadd(
-                      (this->pcRelative ? triton::ast::bv(this->pcRelative, bitSize) : (base.isValid() ? triton::api.buildSymbolicRegister(base) : triton::ast::bv(0, bitSize))),
-                      triton::ast::bvadd(
-                        triton::ast::bvmul(
-                          (index.isValid() ? triton::api.buildSymbolicRegister(index) : triton::ast::bv(0, bitSize)),
-                          triton::ast::bv(scaleValue, bitSize)
-                        ),
-                        triton::ast::bv(dispValue, bitSize)
-                      )
-                    );
-
-        /* Use segments as base address instead of selector into the GDT. */
-        if (segmentValue) {
-          this->ast = triton::ast::bvadd(
-                        triton::ast::bv(segmentValue, this->segmentReg.getBitSize()),
-                        triton::ast::sx((this->segmentReg.getBitSize() - bitSize), this->ast)
-                      );
-        }
-
-        /* Initialize the address only if it is not already defined */
-        if (!this->address)
-          this->address = this->ast->evaluate().convert_to<triton::uint64>();
-      }
+      return this->leaAst;
     }
 
 
@@ -240,20 +153,15 @@ namespace triton {
     }
 
 
-    bool MemoryAccess::isTrusted(void) const {
-      return this->trusted;
+    bool MemoryAccess::isOverlapWith(const MemoryAccess& other) const {
+      if (this->getAddress() <= other.getAddress() && other.getAddress() < (this->getAddress() + this->getSize())) return true;
+      if (other.getAddress() <= this->getAddress() && this->getAddress() < (other.getAddress() + other.getSize())) return true;
+      return false;
     }
 
 
-    bool MemoryAccess::isValid(void) const {
-      if (!this->address && !this->concreteValue && !this->trusted && !this->getLow() && !this->getHigh())
-        return false;
-      return true;
-    }
-
-
-    void MemoryAccess::setTrust(bool flag) {
-      this->trusted = flag;
+    bool MemoryAccess::hasConcreteValue(void) const {
+      return this->concreteValueDefined;
     }
 
 
@@ -265,8 +173,9 @@ namespace triton {
     void MemoryAccess::setConcreteValue(triton::uint512 concreteValue) {
       if (concreteValue > this->getMaxValue())
         throw triton::exceptions::MemoryAccess("MemoryAccess::MemoryAccess(): You cannot set this concrete value (too big) to this memory access.");
-      this->concreteValue = concreteValue;
-      this->trusted       = true;
+
+      this->concreteValue        = concreteValue;
+      this->concreteValueDefined = true;
     }
 
 
@@ -300,6 +209,11 @@ namespace triton {
     }
 
 
+    void MemoryAccess::setLeaAst(triton::ast::AbstractNode* ast) {
+      this->leaAst = ast;
+    }
+
+
     void MemoryAccess::operator=(const MemoryAccess &other) {
       BitsVector::operator=(other);
       this->copy(other);
@@ -307,21 +221,29 @@ namespace triton {
 
 
     void MemoryAccess::copy(const MemoryAccess& other) {
-      this->address       = other.address;
-      this->ast           = other.ast;
-      this->baseReg       = other.baseReg;
-      this->concreteValue = other.concreteValue;
-      this->displacement  = other.displacement;
-      this->indexReg      = other.indexReg;
-      this->pcRelative    = other.pcRelative;
-      this->scale         = other.scale;
-      this->segmentReg    = other.segmentReg;
-      this->trusted       = other.trusted;
+      this->address              = other.address;
+      this->baseReg              = other.baseReg;
+      this->concreteValue        = other.concreteValue;
+      this->concreteValueDefined = other.concreteValueDefined;
+      this->displacement         = other.displacement;
+      this->indexReg             = other.indexReg;
+      this->leaAst               = other.leaAst;
+      this->pcRelative           = other.pcRelative;
+      this->scale                = other.scale;
+      this->segmentReg           = other.segmentReg;
     }
 
 
     std::ostream& operator<<(std::ostream& stream, const MemoryAccess& mem) {
-      stream << "[@0x" << std::hex << mem.getAddress() << "]:" << std::dec << mem.getBitSize() << " bv[" << mem.getHigh() << ".." << mem.getLow() << "]";
+      stream << "[@0x"
+             << std::hex << mem.getAddress()
+             << "]:"
+             << std::dec << mem.getBitSize()
+             << " bv["
+             << mem.getHigh()
+             << ".."
+             << mem.getLow()
+             << "]";
       return stream;
     }
 
@@ -338,6 +260,8 @@ namespace triton {
       if (mem1.getSize() != mem2.getSize())
         return false;
       if (mem1.getConcreteValue() != mem2.getConcreteValue())
+        return false;
+      if (mem1.hasConcreteValue() != mem2.hasConcreteValue())
         return false;
       if (mem1.getConstBaseRegister() != mem2.getConstBaseRegister())
         return false;
@@ -356,14 +280,25 @@ namespace triton {
 
 
     bool operator!=(const MemoryAccess& mem1, const MemoryAccess& mem2) {
-      if (mem1 == mem2)
-        return false;
-      return true;
+      return !(mem1 == mem2);
     }
 
 
     bool operator<(const MemoryAccess& mem1, const MemoryAccess& mem2) {
-      return (mem1.getAddress() * mem1.getSize()) < (mem2.getAddress() * mem2.getSize());
+      triton::uint64 seed1 = 0;
+      triton::uint64 seed2 = 0;
+
+      /*
+       * Golden ratio 32-bits -> 0x9e3779b9
+       * Golden ratio 64-bits -> 0x9e3779b97f4a7c13
+       */
+      seed1 ^= mem1.getAddress() + 0x9e3779b97f4a7c13 + (seed1 << 6) + (seed1 >> 2);
+      seed1 ^= mem1.getSize() + 0x9e3779b97f4a7c13 + (seed1 << 6) + (seed1 >> 2);
+
+      seed2 ^= mem2.getAddress() + 0x9e3779b97f4a7c13 + (seed2 << 6) + (seed2 >> 2);
+      seed2 ^= mem2.getSize() + 0x9e3779b97f4a7c13 + (seed2 << 6) + (seed2 >> 2);
+
+      return (seed1 < seed2);
     }
 
   }; /* arch namespace */

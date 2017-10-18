@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 ## -*- coding: utf-8 -*-
 ##
-##  $ ./triton ./src/examples/pin/strlen.py ./src/samples/others/strlen 1
+##  $ ./build/triton ./src/examples/pin/strlen.py ./src/samples/others/strlen 1
 ##  [+] 011 bytes tainted from the argv[1] (0x7ffd0014d61f) pointer
 ##  Possible solution: ff:ff:ff:ff:ff:ff:00:ff:ff:ff:ff
 ##  Possible solution: 01:01:01:01:01:01:00
@@ -25,9 +25,9 @@
 ##  Possible solution: 80:09:d4:40:03:96:00:00
 ##
 
-from triton  import *
-from ast     import *
-from pintool import *
+from triton     import *
+from triton.ast import *
+from pintool    import *
 
 # What value you want that strlen must return?
 STRLEN_ASSERT_LEN = 6
@@ -58,7 +58,7 @@ def tainting(threadId):
     rsi = getCurrentRegisterValue(REG.RSI) # argv
 
     while rdi > 1:
-        argv = getCurrentMemoryValue(rsi + ((rdi-1) * CPUSIZE.REG), CPUSIZE.REG)
+        argv = getCurrentMemoryValue(rsi + ((rdi-1) * CPUSIZE.QWORD), CPUSIZE.QWORD)
         offset = 0
         while offset != STRLEN_ASSERT_LEN+5:
             taintMemory(argv + offset)

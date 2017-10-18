@@ -5,12 +5,11 @@
 **  This program is under the terms of the BSD License.
 */
 
-#ifdef TRITON_PYTHON_BINDINGS
-
-#include <bitsVector.hpp>
-#include <pythonObjects.hpp>
-#include <pythonUtils.hpp>
-#include <pythonXFunctions.hpp>
+#include <triton/pythonObjects.hpp>
+#include <triton/pythonUtils.hpp>
+#include <triton/pythonXFunctions.hpp>
+#include <triton/bitsVector.hpp>
+#include <triton/exceptions.hpp>
 
 
 
@@ -38,13 +37,13 @@ This object is used to represent a bitvector. Mainly used by \ref py_Register_pa
 \section Bitvector_py_api Python API - Methods of the Bitvector class
 <hr>
 
-- **getHigh(void)**<br>
+- <b>integer getHigh(void)</b><br>
 Returns the highest bit position.
 
-- **getLow(void)**<br>
+- <b>integer getLow(void)</b><br>
 Returns the lower bit position.
 
-- **getVectorSize(void)**<br>
+- <b>integer getVectorSize(void)</b><br>
 Returns the size of the vector.
 
 */
@@ -65,7 +64,7 @@ namespace triton {
         try {
           return PyLong_FromUint32(PyBitvector_AsHigh(self));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -75,7 +74,7 @@ namespace triton {
         try {
           return PyLong_FromUint32(PyBitvector_AsLow(self));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -86,7 +85,7 @@ namespace triton {
           triton::uint32 vectorSize = ((PyBitvector_AsHigh(self) - PyBitvector_AsLow(self)) + 1);
           return PyLong_FromUint32(vectorSize);
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -102,7 +101,7 @@ namespace triton {
         try {
           return PyString_FromFormat("bv[%d..%d]", PyBitvector_AsHigh(self), PyBitvector_AsLow(self));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -210,22 +209,6 @@ namespace triton {
         return (PyObject*)object;
       }
 
-
-      PyObject* PyBitvector(triton::uint32 high, triton::uint32 low) {
-        Bitvector_Object* object;
-
-        PyType_Ready(&Bitvector_Type);
-        object = PyObject_NEW(Bitvector_Object, &Bitvector_Type);
-        if (object != NULL) {
-          object->high = high;
-          object->low  = low;
-        }
-
-        return (PyObject*)object;
-      }
-
     }; /* python namespace */
   }; /* bindings namespace */
 }; /* triton namespace */
-
-#endif /* TRITON_PYTHON_BINDINGS */

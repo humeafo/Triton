@@ -5,9 +5,10 @@
 **  This program is under the terms of the BSD License.
 */
 
-#include <api.hpp>
-#include <exceptions.hpp>
-#include <register.hpp>
+#include <triton/api.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/register.hpp>
+#include <triton/registerSpecification.hpp>
 
 
 
@@ -19,47 +20,33 @@ namespace triton {
     }
 
 
-    Register::Register(triton::uint32 reg, triton::uint512 concreteValue) {
+    Register::Register(triton::uint32 regId) {
       if (!triton::api.isArchitectureValid()) {
         this->clear();
         return;
       }
-      this->setup(reg, concreteValue);
+
+      this->setup(regId);
+      this->immutable            = false;
+      this->concreteValueDefined = false;
     }
 
 
-    void Register::clear(void) {
-      this->concreteValue = 0;
-      this->id            = triton::api.cpuInvalidRegister();
-      this->name          = "unknown";
-      this->parent        = triton::api.cpuInvalidRegister();
-      this->trusted       = false;
+    Register::Register(triton::uint32 regId, triton::uint512 concreteValue)
+      : Register(regId, concreteValue, false) {
     }
 
 
-    void Register::setup(triton::uint32 reg, triton::uint512 concreteValue) {
-      std::tuple<std::string, triton::uint32, triton::uint32, triton::uint32> regInfo;
-
-      this->id        = reg;
-      this->trusted   = true;
-
-      if (!triton::api.isCpuRegisterValid(reg)) {
-        this->id      = triton::api.cpuInvalidRegister();
-        this->trusted = false;
+    Register::Register(triton::uint32 regId, triton::uint512 concreteValue, bool immutable) {
+      if (!triton::api.isArchitectureValid()) {
+        this->clear();
+        return;
       }
 
-      regInfo      = triton::api.getCpuRegInformation(this->id);
-
-      this->name   = std::get<0>(regInfo);
-      this->parent = std::get<3>(regInfo);
-
-      this->setHigh(std::get<1>(regInfo));
-      this->setLow(std::get<2>(regInfo));
-
-      if (concreteValue > this->getMaxValue())
-        throw triton::exceptions::Register("Register::setup(): You cannot set this concrete value (too big) to this register.");
-
-      this->concreteValue = concreteValue;
+      this->setup(regId);
+      this->immutable = false;
+      this->setConcreteValue(concreteValue);
+      this->immutable = immutable;
     }
 
 
@@ -69,6 +56,48 @@ namespace triton {
 
 
     Register::~Register() {
+    }
+
+
+    void Register::operator=(const Register& other) {
+      BitsVector::operator=(other);
+      this->copy(other);
+    }
+
+
+    void Register::clear(void) {
+      this->concreteValue        = 0;
+      this->concreteValueDefined = false;
+      this->id                   = triton::arch::INVALID_REGISTER_ID;
+      this->immutable            = false;
+      this->name                 = "unknown";
+      this->parent               = triton::arch::INVALID_REGISTER_ID;
+    }
+
+
+    void Register::setup(triton::uint32 regId) {
+      triton::arch::RegisterSpecification regInfo;
+
+      this->id = regId;
+      if (!triton::api.isRegisterValid(regId))
+        this->id = triton::arch::INVALID_REGISTER_ID;
+
+      regInfo      = triton::api.getRegisterSpecification(this->id);
+      this->name   = regInfo.getName();
+      this->parent = regInfo.getParentId();
+
+      this->setHigh(regInfo.getHigh());
+      this->setLow(regInfo.getLow());
+    }
+
+
+    void Register::copy(const Register& other) {
+      this->concreteValue        = other.concreteValue;
+      this->concreteValueDefined = other.concreteValueDefined;
+      this->id                   = other.id;
+      this->immutable            = false;
+      this->name                 = other.name;
+      this->parent               = other.parent;
     }
 
 
@@ -117,66 +146,56 @@ namespace triton {
     }
 
 
-    bool Register::isTrusted(void) const {
-      return this->trusted;
+    void Register::setId(triton::uint32 regId) {
+      this->id = regId;
     }
 
 
-    void Register::setTrust(bool flag) {
-      this->trusted = flag;
-    }
-
-
-    void Register::setId(triton::uint32 reg) {
-      this->id = reg;
-    }
-
-
-    void Register::setParent(triton::uint32 reg) {
-      this->parent = reg;
+    void Register::setParent(triton::uint32 regId) {
+      this->parent = regId;
     }
 
 
     void Register::setConcreteValue(triton::uint512 concreteValue) {
       if (concreteValue > this->getMaxValue())
         throw triton::exceptions::Register("Register::setConcreteValue(): You cannot set this concrete value (too big) to this register.");
-      this->concreteValue = concreteValue;
-      this->trusted       = true;
+
+      if (this->immutable)
+        return;
+
+      this->concreteValue        = concreteValue;
+      this->concreteValueDefined = true;
     }
 
 
-    bool Register::isValid(void) const {
-      return triton::api.isCpuRegisterValid(this->id);
+    bool Register::isImmutable(void) const {
+      return this->immutable;
     }
 
 
-    bool Register::isRegister(void) const {
-      return triton::api.isCpuRegister(this->id);
+    bool Register::isOverlapWith(const Register& other) const {
+      if (this->getParent().getId() == other.getParent().getId()) {
+        if (this->getLow() <= other.getLow() && other.getLow() <= this->getHigh()) return true;
+        if (other.getLow() <= this->getLow() && this->getLow() <= other.getHigh()) return true;
+      }
+      return false;
     }
 
 
-    bool Register::isFlag(void) const {
-      return triton::api.isCpuFlag(this->id);
-    }
-
-
-    void Register::operator=(const Register& other) {
-      BitsVector::operator=(other);
-      this->copy(other);
-    }
-
-
-    void Register::copy(const Register& other) {
-      this->concreteValue = other.concreteValue;
-      this->id            = other.id;
-      this->name          = other.name;
-      this->parent        = other.parent;
-      this->trusted       = other.trusted;
+    bool Register::hasConcreteValue(void) const {
+      return this->concreteValueDefined;
     }
 
 
     std::ostream& operator<<(std::ostream& stream, const Register& reg) {
-      stream << reg.getName() << ":" << reg.getBitSize() << " bv[" << reg.getHigh() << ".." << reg.getLow() << "]";
+      stream << reg.getName()
+             << ":"
+             << std::dec << reg.getBitSize()
+             << " bv["
+             << reg.getHigh()
+             << ".."
+             << reg.getLow()
+             << "]";
       return stream;
     }
 
@@ -197,16 +216,13 @@ namespace triton {
 
 
     bool operator!=(const Register& reg1, const Register& reg2) {
-      if (reg1 == reg2)
-        return false;
-      return true;
+      return !(reg1 == reg2);
     }
 
 
     bool operator<(const Register& reg1, const Register& reg2) {
-      return reg1.getId() < reg2.getId();
+      return (reg1.getId() < reg2.getId());
     }
-
 
   }; /* arch namespace */
 }; /* triton namespace */

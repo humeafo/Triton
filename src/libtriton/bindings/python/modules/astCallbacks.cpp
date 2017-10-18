@@ -5,18 +5,16 @@
 **  This program is under the terms of the BSD License.
 */
 
-#ifdef TRITON_PYTHON_BINDINGS
-
-#include <api.hpp>
-#include <ast.hpp>
-#include <pythonObjects.hpp>
-#include <pythonUtils.hpp>
+#include <triton/pythonObjects.hpp>
+#include <triton/pythonUtils.hpp>
+#include <triton/api.hpp>
+#include <triton/ast.hpp>
+#include <triton/exceptions.hpp>
 
 
 
 /*! \page py_ast_page AST Representations
     \brief [**python api**] All information about the ast python module.
-    \anchor ast
 
 \tableofcontents
 
@@ -29,7 +27,7 @@ you to perform precise analysis and allows you to build and to modify your own s
 ~~~~~~~~~~~~~{.py}
 >>> from triton import ast
 >>> ast
-<module 'ast' (built-in)>
+<module 'triton.ast' (built-in)>
 ~~~~~~~~~~~~~
 
 \subsection ast_form_page AST Form
@@ -83,7 +81,7 @@ add al, cl
 
 At the line 5, the AST of the `AL` register looks like this:
 
-<p align="center"><img width="400" src="http://triton.quarkslab.com/files/smt_ast.svg"/></p>
+<p align="center"><img width="400" src="https://triton.quarkslab.com/files/smt_ast.svg"/></p>
 
 This AST represents the semantics of the `AL` register at the program point 5 from the program point 1. Note that this AST has been simplified for
 a better comprehension. The real AST contains some `concat` and `extract` as mentioned in the previous chapter. According to the API you can build
@@ -96,7 +94,7 @@ and modify your own AST. Then, you can perform some modifications and simplifica
 To manage more easily the subtree and to keep the SSA form of registers and memory, we have added a `REFERENCE` node which is a "terminate" node of a
 tree but contains a reference to another subtree. Below, an example of one "partial" tree linked with two other subtrees.
 
-<p align="center"><img width="600" src="http://triton.quarkslab.com/files/smt_ast_ref.svg"/></p>
+<p align="center"><img width="600" src="https://triton.quarkslab.com/files/smt_ast_ref.svg"/></p>
 
 If you try to go through the full AST you will fail at the first reference node because a reference node does not contains child nodes.
 The only way to jump from a reference node to the targeted node is to use the triton::engines::symbolic::SymbolicEngine::getFullAst() function.
@@ -218,212 +216,217 @@ Python's Operator | e.g: SMT2-Lib format
 a + b             | (bvadd a b)
 a - b             | (bvsub a b)
 a \* b            | (bvmul a b)
-a \ b             | (bvsdiv a b)
+a / b             | (bvudiv a b)
 a \| b            | (bvor a b)
 a & b             | (bvand a b)
 a ^ b             | (bvxor a b)
-a % b             | (bvsmod a b)
+a % b             | (bvurem a b)
 a << b            | (bvshl a b)
 a \>> b           | (bvlshr a b)
 ~a                | (bvnot a)
 -a                | (bvneg a)
+a == b            | (= a b)
+a != b            | (not (= a b))
+a <= b            | (bvule a b)
+a >= b            | (bvuge a b)
+a < b             | (bvult a b)
+a > b             | (bvugt a b)
 
+\anchor ast
 \section ast_py_api Python API - Methods of the ast module
 <hr>
 
-- **assert_(AstNode expr1)**<br>
-Returns the ast `triton::ast::assert_()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page assert_(\ref py_AstNode_page expr1)</b><br>
+Creates an `assert` node.<br>
 e.g: `(assert expr1)`.
 
-- **bv(integer value, integer size)**<br>
-Returns the ast `triton::ast::bv()` representation as \ref py_AstNode_page. The `size` is in bits.<br>
-e.g: `(_ bvValue size)`.
+- <b>\ref py_AstNode_page bv(integer value, integer size)</b><br>
+Creates a `bv` node (bitvector). The `size` must be in bits.<br>
+e.g: `(_ bv<balue> size)`.
 
-- **bvadd(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvadd()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvadd(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvadd` node.<br>
 e.g: `(bvadd expr1 epxr2)`.
 
-- **bvand(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvand()` as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvand(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvand` node.<br>
 e.g: `(bvand expr1 epxr2)`.
 
-- **bvashr(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvashr()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvashr(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvashr` node.<br>
 e.g: `(bvashr expr1 epxr2)`.
 
-- **bvdecl(integer size)**<br>
-Returns the ast `triton::ast::bvdecl()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvdecl(integer size)</b><br>
+Declares a bitvector node.<br>
 e.g: `(_ BitVec size)`.
 
-- **bvfalse()**<br>
+- <b>\ref py_AstNode_page bvfalse(void)</b><br>
 This is an alias on the `(_ bv0 1)` ast expression.
 
-- **bvlshr(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvlshr()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvlshr(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvlshr` node.<br>
 e.g: `(lshr expr1 epxr2)`.
 
-- **bvmul(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvmul()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvmul(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvmul` node.<br>
 e.g: `(bvmul expr1 expr2)`.
 
-- **bvnand(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvnand()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvnand(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvnand` node.<br>
 e.g: `(bvnand expr1 expr2)`.
 
-- **bvneg(AstNode expr1)**<br>
-Returns the ast `triton::ast::bvneg()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvneg(\ref py_AstNode_page expr1)</b><br>
+Creates a `bvneg` node.<br>
 e.g: `(bvneg expr1)`.
 
-- **bvnor(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvnor()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvnor(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvnor` node.<br>
 e.g: `(bvnor expr1 expr2)`.
 
-- **bvnot(AstNode expr1)**<br>
-Returns the ast `triton::ast::bvnot()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvnot(\ref py_AstNode_page expr1)</b><br>
+Creates a `bvnot` node.<br>
 e.g: `(bvnot expr1)`.
 
-- **bvor(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvor()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvor(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvor` node.<br>
 e.g: `(bvor expr1 expr2)`.
 
-- **bvror(integer displacement, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvror()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvror(integer displacement, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvror` node.<br>
 e.g: `((_ rotate_right displacement) expr)`.
 
-- **bvrol(integer displacement, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvrol()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvrol(integer displacement, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvrol` node.<br>
 e.g: `((_ rotate_left displacement) expr)`.
 
-- **bvsdiv(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvsdiv()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvsdiv(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvsdiv` node.<br>
 e.g: `(bvsdiv expr1 epxr2)`.
 
-- **bvsge(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvsge()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvsge(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvsge` node.<br>
 e.g: `(bvsge expr1 epxr2)`.
 
-- **bvsgt(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvsgt()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvsgt(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvsgt` node.<br>
 e.g: `(bvsgt expr1 epxr2)`.
 
-- **bvshl(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvshl()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvshl(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a Bvshl node.<br>
 e.g: `(bvshl expr1 expr2)`.
 
-- **bvsle(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvsle()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvsle(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvsle` node.<br>
 e.g: `(bvsle expr1 epxr2)`.
 
-- **bvslt(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvslt()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvslt(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvslt` node.<br>
 e.g: `(bvslt expr1 epxr2)`.
 
-- **bvsmod(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvsmod()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvsmod(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvsmod` node.<br>
 e.g: `(bvsmod expr1 expr2)`.
 
-- **bvsrem(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvsrem()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvsrem(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvsrem` node.<br>
 e.g: `(bvsrem expr1 expr2)`.
 
-- **bvsub(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvsub()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvsub(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvsub` node.<br>
 e.g: `(bvsub expr1 epxr2)`.
 
-- **bvtrue()**<br>
-This is an alias on the `(_ bv1 1)` ast expression.
+- <b>\ref py_AstNode_page bvtrue(void)</b><br>
+This is an alias on the `(_ bv1 1)` ast expression.<br>
 
-- **bvudiv(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvudiv()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvudiv(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvudiv` node.<br>
 e.g: `(bvudiv expr1 epxr2)`.
 
-- **bvuge(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvuge()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvuge(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvuge` node.<br>
 e.g: `(bvuge expr1 epxr2)`.
 
-- **bvugt(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvugt()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvugt(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvugt` node.<br>
 e.g: `(bvugt expr1 epxr2)`.
 
-- **bvule(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvule()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvule(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvule` node.<br>
 e.g: `(bvule expr1 epxr2)`.
 
-- **bvult(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvult()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvult(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvult` node.<br>
 e.g: `(bvult expr1 epxr2)`.
 
-- **bvurem(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvurem()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvurem(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvurem` node.<br>
 e.g: `(bvurem expr1 expr2)`.
 
-- **bvxnor(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvxnor()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvxnor(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvxnor` node.<br>
 e.g: `(bvxnor expr1 expr2)`.
 
-- **bvxor(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::bvxor()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page bvxor(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `bvxor` node.<br>
 e.g: `(bvxor expr1 epxr2)`.
 
-- **compound([AstNode expr ...])**<br>
-Returns the `triton::ast::compound()` node as \ref py_AstNode_page.
+- <b>\ref py_AstNode_page compound([\ref py_AstNode_page expr ...])</b><br>
+Creates a `compound` node (a statement of several unrelated nodes).
 
-- **concat([AstNode expr ...])**<br>
-Returns the `triton::ast::concat()` node as \ref py_AstNode_page.
+- <b>\ref py_AstNode_page concat([\ref py_AstNode_page expr ...])</b><br>
+Concatenates several nodes.
 
-- **distinct(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::distinct()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page distinct(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `distinct` node.<br>
 e.g: `(distinct expr1 expr2)`
 
-- **duplicate(AstNode expr)**<br>
+- <b>\ref py_AstNode_page duplicate(\ref py_AstNode_page expr)</b><br>
 Duplicates the node and returns a new instance as \ref py_AstNode_page. When you play with a node, it's recommended to use this function before any manipulation.
 
-- **equal(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::equal()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page equal(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates an `equal` node.<br>
 e.g: `(= expr1 epxr2)`.
 
-- **extract(integer high, integer low, AstNode expr1)**<br>
-Returns the ast `triton::ast::extract()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page extract(integer high, integer low, \ref py_AstNode_page expr1)</b><br>
+Creates an `extract` node. The `high` and `low` fields represent the bits position.<br>
 e.g: `((_ extract high low) expr1)`.
 
-- **ite(AstNode ifExpr, AstNode thenExpr, AstNode elseExpr)**<br>
-Returns the ast `triton::ast::ite()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page ite(\ref py_AstNode_page ifExpr, \ref py_AstNode_page thenExpr, \ref py_AstNode_page elseExpr)</b><br>
+Creates an `ite` node.<br>
 e.g: `(ite ifExpr thenExpr elseExpr)`.
 
-- **land(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::land()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page land(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `land` node (logical AND).<br>
 e.g: `(and expr1 expr2)`.
 
-- **let(string alias, AstNode expr2, AstNode expr3)**<br>
-Returns the ast `triton::ast::let()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page let(string alias, \ref py_AstNode_page expr2, \ref py_AstNode_page expr3)</b><br>
+Creates a `let` node.<br>
 e.g: `(let ((alias expr2)) expr3)`.
 
-- **lnot(AstNode expr)**<br>
-Returns the ast `triton::ast::lnot()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page lnot(\ref py_AstNode_page expr)</b><br>
+Creates a `lnot` node (logical NOT).<br>
 e.g: `(not expr)`.
 
-- **lor(AstNode expr1, AstNode expr2)**<br>
-Returns the ast `triton::ast::lor()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page lor(\ref py_AstNode_page expr1, \ref py_AstNode_page expr2)</b><br>
+Creates a `lor` node (logical OR).<br>
 e.g: `(or expr1 expr2)`.
 
-- **reference(integer exprId)**<br>
-Returns the reference (`triton::ast::reference()`) node representation as \ref py_AstNode_page.
-Be careful, the targeted node reference is always on the max vector size, except for volatile
-expressions.<br>
+- <b>\ref py_AstNode_page reference(integer exprId)</b><br>
+Creates a reference node (SSA-based).<br>
 e.g: `ref!123`.
 
-- **string(string s)**<br>
-Returns a `triton::ast::string()` node as \ref py_AstNode_page.
+- <b>\ref py_AstNode_page string(string s)</b><br>
+Creates a `string` node.
 
-- **sx(integer sizeExt, AstNode expr1)**<br>
-Returns the ast `triton::ast::sx()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page sx(integer sizeExt, \ref py_AstNode_page expr1)</b><br>
+Creates a `sx` node (sign extend).<br>
 e.g: `((_ sign_extend sizeExt) expr1)`.
 
-- **variable(\ref py_SymbolicVariable_page symVar)**<br>
-Returns a `triton::ast::variable()` node as \ref py_AstNode_page.
+- <b>\ref py_AstNode_page variable(\ref py_SymbolicVariable_page symVar)</b><br>
+Creates a `variable` node.
 
-- **zx(integer sizeExt, AstNode expr1)**<br>
-Returns the ast `triton::ast::zx()` representation as \ref py_AstNode_page.<br>
+- <b>\ref py_AstNode_page zx(integer sizeExt, \ref py_AstNode_page expr1)</b><br>
+Creates a `zx` node (zero extend).<br>
 e.g: `((_ zero_extend sizeExt) expr1)`.
 
 */
@@ -442,7 +445,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::assert_(PyAstNode_AsAstNode(expr)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -464,7 +467,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bv(PyLong_AsUint512(op1), PyLong_AsUint32(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -486,7 +489,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvadd(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -508,7 +511,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvand(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -530,7 +533,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvashr(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -543,7 +546,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvdecl(PyLong_AsUint32(size)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -553,7 +556,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvfalse());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -575,7 +578,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvlshr(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -597,7 +600,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvmul(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -619,7 +622,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvnand(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -632,7 +635,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvneg(PyAstNode_AsAstNode(op1)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -654,7 +657,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvnor(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -667,7 +670,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvnot(PyAstNode_AsAstNode(op1)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -689,7 +692,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvor(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -711,7 +714,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvror(PyLong_AsUint32(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -733,7 +736,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvrol(PyLong_AsUint32(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -755,7 +758,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvsdiv(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -777,7 +780,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvsge(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -799,7 +802,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvsgt(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -821,7 +824,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvshl(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -843,7 +846,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvsle(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -865,7 +868,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvslt(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -887,7 +890,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvsmod(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -909,7 +912,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvsrem(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -931,7 +934,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvsub(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -941,7 +944,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvtrue());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -963,7 +966,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvudiv(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -985,7 +988,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvuge(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1007,7 +1010,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvugt(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1029,7 +1032,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvule(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1051,7 +1054,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvult(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1073,7 +1076,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvurem(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1095,7 +1098,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvxnor(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1117,7 +1120,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::bvxor(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1139,7 +1142,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::distinct(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1152,7 +1155,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::newInstance(PyAstNode_AsAstNode(expr)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1177,7 +1180,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::compound(exprs));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1202,7 +1205,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::concat(exprs));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1224,7 +1227,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::equal(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1250,7 +1253,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::extract(PyLong_AsUint32(op1), PyLong_AsUint32(op2), PyAstNode_AsAstNode(op3)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1276,7 +1279,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::ite(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2), PyAstNode_AsAstNode(op3)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1298,7 +1301,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::land(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1324,7 +1327,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::let(PyString_AsString(op1), PyAstNode_AsAstNode(op2), PyAstNode_AsAstNode(op3)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1337,7 +1340,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::lnot(PyAstNode_AsAstNode(expr)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1359,7 +1362,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::lor(PyAstNode_AsAstNode(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1375,7 +1378,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::reference(PyLong_AsUsize(exprId)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1388,7 +1391,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::string(PyString_AsString(expr)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1410,7 +1413,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::sx(PyLong_AsUint32(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1423,7 +1426,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::variable(*PySymbolicVariable_AsSymbolicVariable(symVar)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1445,7 +1448,7 @@ namespace triton {
         try {
           return PyAstNode(triton::ast::zx(PyLong_AsUint32(op1), PyAstNode_AsAstNode(op2)));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -1508,6 +1511,4 @@ namespace triton {
     }; /* python namespace */
   }; /* bindings namespace */
 }; /* triton namespace */
-
-#endif /* TRITON_PYTHON_BINDINGS */
 

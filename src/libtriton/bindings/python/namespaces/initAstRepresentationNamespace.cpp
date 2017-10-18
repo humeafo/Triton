@@ -5,12 +5,9 @@
 **  This program is under the terms of the BSD License.
 */
 
-#ifdef TRITON_PYTHON_BINDINGS
-
-#include <astRepresentation.hpp>
-#include <pythonBindings.hpp>
-#include <pythonUtils.hpp>
-
+#include <triton/pythonBindings.hpp>
+#include <triton/pythonUtils.hpp>
+#include <triton/astRepresentation.hpp>
 
 
 /*! \page py_AST_REPRESENTATION_page AST_REPRESENTATION
@@ -21,7 +18,7 @@
 \section AST_REPRESENTATION_py_description Description
 <hr>
 
-The AST_REPRESENTATION namespace contains all modes of AST representation.
+The AST_REPRESENTATION namespace contains all kinds of AST representation.
 
 \subsection AST_REPRESENTATION_py_example Example
 
@@ -55,5 +52,3 @@ namespace triton {
     }; /* python namespace */
   }; /* bindings namespace */
 }; /* triton namespace */
-
-#endif /* TRITON_PYTHON_BINDINGS */

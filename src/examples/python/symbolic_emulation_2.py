@@ -1,30 +1,32 @@
 #!/usr/bin/env python2
 ## -*- coding: utf-8 -*-
 ##
-## $ ./src/examples/python/symbolic_emulation_2.py
-## Curr ip: 40056d: push rbp
-## Next ip: 0x40056eL
+## Output:
 ##
-## Curr ip: 40056e: mov rax, 0x41424344
-## Next ip: 0x400575L
+##  $ ./src/examples/python/symbolic_emulation_2.py
+##  Curr ip: 40056d: push rbp
+##  Next ip: 0x40056eL
 ##
-## Curr ip: 400575: call rax
-## Next ip: 0x41424344L
+##  Curr ip: 40056e: mov rax, 0x41424344
+##  Next ip: 0x400575L
 ##
-## Curr ip: 41424344: xor rbx, rbx
-## Next ip: 0x41424347L
+##  Curr ip: 400575: call rax
+##  Next ip: 0x41424344L
 ##
-## Curr ip: 41424347: ret
-## Next ip: 0x400577L
+##  Curr ip: 41424344: xor rbx, rbx
+##  Next ip: 0x41424347L
 ##
-## Curr ip: 400577: ret
-## Next ip: 0x99999999L
+##  Curr ip: 41424347: ret
+##  Next ip: 0x400577L
+##
+##  Curr ip: 400577: ret
+##  Next ip: 0x99999999L
 ##
 
 import  sys
 
-from triton import *
-from ast    import *
+from triton     import *
+from triton.ast import *
 
 
 function = {
@@ -78,7 +80,7 @@ if __name__ == '__main__':
     setArchitecture(ARCH.X86_64)
 
     # Symbolic optimization
-    enableSymbolicOptimization(OPTIMIZATION.ALIGNED_MEMORY, True)
+    enableMode(MODE.ALIGNED_MEMORY, True)
 
     # Define entry point
     ENTRY = 0x40056d

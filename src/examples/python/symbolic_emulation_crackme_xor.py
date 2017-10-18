@@ -1,13 +1,10 @@
 #!/usr/bin/env python2
 ## -*- coding: utf-8 -*-
-##
-##
-
 
 import  sys
 
-from triton import *
-from ast    import *
+from triton     import *
+from triton.ast import *
 
 function = {
                                               #   <serial> function
@@ -51,7 +48,7 @@ if __name__ == '__main__':
     setArchitecture(ARCH.X86_64)
 
     # Symbolic optimization
-    enableSymbolicOptimization(OPTIMIZATION.ALIGNED_MEMORY, True)
+    enableMode(MODE.ALIGNED_MEMORY, True)
 
     # Define entry point
     pc = 0x40056d

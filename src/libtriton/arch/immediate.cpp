@@ -5,9 +5,9 @@
 **  This program is under the terms of the BSD License.
 */
 
-#include <cpuSize.hpp>
-#include <exceptions.hpp>
-#include <immediate.hpp>
+#include <triton/cpuSize.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/immediate.hpp>
 
 
 
@@ -23,7 +23,13 @@ namespace triton {
       if (size == 0)
         throw triton::exceptions::Immediate("Immediate::Immediate(): size cannot be zero.");
 
-      if (size != BYTE_SIZE && size != WORD_SIZE && size != DWORD_SIZE && size != QWORD_SIZE && size != DQWORD_SIZE && size != QQWORD_SIZE && size != DQQWORD_SIZE)
+      if (size != BYTE_SIZE     &&
+          size != WORD_SIZE     &&
+          size != DWORD_SIZE    &&
+          size != QWORD_SIZE    &&
+          size != DQWORD_SIZE   &&
+          size != QQWORD_SIZE   &&
+          size != DQQWORD_SIZE)
         throw triton::exceptions::Immediate("Immediate::Immediate(): size must be aligned.");
 
       switch (size) {
@@ -100,7 +106,15 @@ namespace triton {
 
 
     std::ostream& operator<<(std::ostream& stream, const Immediate& imm) {
-      stream << "0x" << std::hex << imm.getValue() << ":" << std::dec << imm.getBitSize() << " bv[" << imm.getHigh() << ".." << imm.getLow() << "]";
+      stream << "0x"
+             << std::hex << imm.getValue()
+             << ":"
+             << std::dec << imm.getBitSize()
+             << " bv["
+             << imm.getHigh()
+             << ".."
+             << imm.getLow()
+             << "]";
       return stream;
     }
 
@@ -121,14 +135,25 @@ namespace triton {
 
 
     bool operator!=(const Immediate& imm1, const Immediate& imm2) {
-      if (imm1 == imm2)
-        return false;
-      return true;
+      return !(imm1 == imm2);
     }
 
 
     bool operator<(const Immediate& imm1, const Immediate& imm2) {
-      return imm1.getValue() < imm2.getValue();
+      triton::uint64 seed1 = 0;
+      triton::uint64 seed2 = 0;
+
+      /*
+       * Golden ratio 32-bits -> 0x9e3779b9
+       * Golden ratio 64-bits -> 0x9e3779b97f4a7c13
+       */
+      seed1 ^= imm1.getValue() + 0x9e3779b97f4a7c13 + (seed1 << 6) + (seed1 >> 2);
+      seed1 ^= imm1.getSize() + 0x9e3779b97f4a7c13 + (seed1 << 6) + (seed1 >> 2);
+
+      seed2 ^= imm2.getValue() + 0x9e3779b97f4a7c13 + (seed2 << 6) + (seed2 >> 2);
+      seed2 ^= imm2.getSize() + 0x9e3779b97f4a7c13 + (seed2 << 6) + (seed2 >> 2);
+
+      return (seed1 < seed2);
     }
 
   }; /* arch namespace */

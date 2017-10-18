@@ -2,7 +2,7 @@
 
 **Triton** is a dynamic binary analysis (DBA) framework. It provides internal components like a Dynamic Symbolic Execution (DSE)
 engine, a Taint Engine, AST representations of the x86 and the x86-64 instructions set semantics, SMT simplification
-passes, a SMT Solver Interface and, the last but not least, Python bindings.
+passes, an SMT Solver Interface and, the last but not least, Python bindings.
 
 <p align="center">
     <img src="http://triton.quarkslab.com/files/triton_v03_architecture.svg"/></br>
@@ -16,9 +16,17 @@ As **Triton** is still a young project, please, **don't blame us** if it is not 
 A full documentation is available on our [doxygen page](http://triton.quarkslab.com/documentation/doxygen).</p>
 
 <p>
-  <a href="https://travis-ci.org/JonathanSalwan/Triton/branches"><img src="https://img.shields.io/travis/JonathanSalwan/Triton/master.svg?style=flat-square&label=unix%20build"></a>
+  <a href="https://travis-ci.org/JonathanSalwan/Triton/branches">
+    <img src="https://img.shields.io/travis/JonathanSalwan/Triton/master.svg?style=flat-square&label=unix%20build">
+  </a>
   &nbsp;
-  <a href="https://ci.appveyor.com/project/JonathanSalwan/triton"><img src="https://img.shields.io/appveyor/ci/JonathanSalwan/triton/master.svg?style=flat-square&label=windows%20build"></a>
+  <a href="https://ci.appveyor.com/project/JonathanSalwan/triton">
+    <img src="https://img.shields.io/appveyor/ci/JonathanSalwan/triton/master.svg?style=flat-square&label=windows%20build">
+  </a>
+  &nbsp;
+  <a href="https://codecov.io/gh/JonathanSalwan/Triton">
+    <img src="https://codecov.io/gh/JonathanSalwan/Triton/branch/master/graph/badge.svg" alt="Codecov" />
+  </a>
 </p>
 
 ### Quick start
@@ -31,13 +39,12 @@ A full documentation is available on our [doxygen page](http://triton.quarkslab.
 ### Internal documentation
 
 * [Dynamic Symbolic Execution](http://triton.quarkslab.com/documentation/doxygen/engine_DSE_page.html)
-* [Symbolic Execution Optimizations](http://triton.quarkslab.com/documentation/doxygen/py_OPTIMIZATION_page.html)
+* [Symbolic Execution Optimizations](http://triton.quarkslab.com/documentation/doxygen/py_MODE_page.html)
 * [AST Representations of Semantics](http://triton.quarkslab.com/documentation/doxygen/py_ast_page.html)
 * [SMT Semantics Supported](http://triton.quarkslab.com/documentation/doxygen/SMT_Semantics_Supported_page.html)
 * [SMT Solver Interface](http://triton.quarkslab.com/documentation/doxygen/solver_interface_page.html)
 * [SMT Simplification Passes](http://triton.quarkslab.com/documentation/doxygen/SMT_simplification_page.html)
 * [Spread Taint](http://triton.quarkslab.com/documentation/doxygen/engine_Taint_page.html)
-* [Replay Trace via Snapshot](http://triton.quarkslab.com/documentation/doxygen/Snapshot_page.html)
 * [Tracer Independent](http://triton.quarkslab.com/documentation/doxygen/Tracer_page.html)
 * [Python Bindings](http://triton.quarkslab.com/documentation/doxygen/py_triton_page.html)
 
@@ -53,6 +60,7 @@ A [blog](http://triton.quarkslab.com/blog/) is available and you can follow us o
 ### Authors
 
 * **Jonathan Salwan** - Lead dev, Quarkslab
+* **Pierrick Brunet** - Core dev, Quarkslab
 * **Florent Saudel** - Core dev, Bordeaux University
 * **Romain Thomas** - Core dev, Quarkslab
 

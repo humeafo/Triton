@@ -5,12 +5,11 @@
 **  This program is under the terms of the BSD License.
 */
 
-#ifdef TRITON_PYTHON_BINDINGS
-
-#include <elfSymbolTable.hpp>
-#include <pythonObjects.hpp>
-#include <pythonUtils.hpp>
-#include <pythonXFunctions.hpp>
+#include <triton/pythonObjects.hpp>
+#include <triton/pythonUtils.hpp>
+#include <triton/pythonXFunctions.hpp>
+#include <triton/elfSymbolTable.hpp>
+#include <triton/exceptions.hpp>
 
 
 
@@ -53,26 +52,26 @@ dup2
 \section ElfSymbolTable_py_api Python API - Methods of the ElfSymbolTable class
 <hr>
 
-- **getIdxname(void)**<br>
+- <b>integer getIdxname(void)</b><br>
 Returns the section index name. This member holds an index into the object file's
 symbol string table, which holds the character representations of the symbol names.
 If the value is non-zero, it represents a string table index that gives the symbol
 name. Otherwise, the symbol table entry has no name.
 
-- **getInfo(void)**<br>
+- <b>\ref py_ELF_page getInfo(void)</b><br>
 Returns the section info. This member specifies the symbol's type and binding attributes.
 A list of the values and meanings appears below.
 
-- **getName(void)**<br>
-Returns the section name as string. This member specifies the name of the symbol as string
+- <b>string getName(void)</b><br>
+Returns the section name. This member specifies the name of the symbol as string
 based on the triton::format::elf::ElfSymbolTable::idxname.<br>
 e.g: `main`
 
-- **getOther(void)**<br>
+- <b>\ref py_ELF_page getOther(void)</b><br>
 Returns the other field of the symbol table structure. This member currently specifies a
 symbol's visibility.
 
-- **getShndx(void)**<br>
+- <b>integer getShndx(void)</b><br>
 Returns the shndx field of the symbol table structure. Every symbol table entry is defined
 in relation to some section. This member holds the relevant section header table index.
 As the sh_link and sh_info interpretation table and the related text describe, some section
@@ -80,12 +79,12 @@ indexes indicate special meanings. If this member contains triton::format::elf::
 then the actual section header index is too large to fit in this field. The actual value is
 contained in the associated section of type triton::format::elf::SHT_SYMTAB_SHNDX.
 
-- **getSize(void)**<br>
+- <b>integer getSize(void)</b><br>
 Returns the section size. Many symbols have associated sizes. For example, a data object's size
 is the number of bytes contained in the object. This member holds 0 if the symbol has no size or
 an unknown size.
 
-- **getValue(void)**<br>
+- <b>integer getValue(void)</b><br>
 Returns the symbol value. This member gives the value of the associated symbol. Depending on
 the context, this may be an absolute value, an address, and so on.
 
@@ -109,7 +108,7 @@ namespace triton {
         try {
           return PyLong_FromUint32(PyElfSymbolTable_AsElfSymbolTable(self)->getIdxname());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -119,7 +118,7 @@ namespace triton {
         try {
           return PyLong_FromUint32(PyElfSymbolTable_AsElfSymbolTable(self)->getInfo());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -129,7 +128,7 @@ namespace triton {
         try {
           return PyString_FromString(PyElfSymbolTable_AsElfSymbolTable(self)->getName().c_str());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -139,7 +138,7 @@ namespace triton {
         try {
           return PyLong_FromUint32(PyElfSymbolTable_AsElfSymbolTable(self)->getOther());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -149,7 +148,7 @@ namespace triton {
         try {
           return PyLong_FromUint32(PyElfSymbolTable_AsElfSymbolTable(self)->getShndx());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -159,7 +158,7 @@ namespace triton {
         try {
           return PyLong_FromUint64(PyElfSymbolTable_AsElfSymbolTable(self)->getSize());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -169,7 +168,7 @@ namespace triton {
         try {
           return PyLong_FromUint64(PyElfSymbolTable_AsElfSymbolTable(self)->getValue());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -254,5 +253,3 @@ namespace triton {
     }; /* python namespace */
   }; /* bindings namespace */
 }; /* triton namespace */
-
-#endif /* TRITON_PYTHON_BINDINGS */

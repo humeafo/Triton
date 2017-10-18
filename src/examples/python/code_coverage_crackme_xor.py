@@ -1,6 +1,8 @@
 #!/usr/bin/env python2
 ## -*- coding: utf-8 -*-
 ##
+## Output:
+##
 ##  $ ./code_coverage_crackme_xor.py
 ##  Seed injected: {4096: 1}
 ##  Seed injected: {4096L: 101L}
@@ -17,8 +19,8 @@
 
 import  sys
 
-from triton import *
-from ast    import *
+from triton     import *
+from triton.ast import *
 
 
 # Isolated function code which must be cover. The source code
@@ -185,7 +187,7 @@ if __name__ == '__main__':
     setArchitecture(ARCH.X86_64)
 
     # Symbolic optimization
-    enableSymbolicOptimization(OPTIMIZATION.ALIGNED_MEMORY, True)
+    enableMode(MODE.ALIGNED_MEMORY, True)
 
     # Define entry point
     ENTRY = 0x40056d

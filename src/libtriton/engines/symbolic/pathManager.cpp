@@ -5,10 +5,9 @@
 **  This program is under the terms of the BSD License.
 */
 
-#include <api.hpp>
-#include <exceptions.hpp>
-#include <pathManager.hpp>
-#include <symbolicEnums.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/pathManager.hpp>
+#include <triton/symbolicEnums.hpp>
 
 
 
@@ -16,7 +15,10 @@ namespace triton {
   namespace engines {
     namespace symbolic {
 
-      PathManager::PathManager() {
+      PathManager::PathManager(triton::modes::Modes* modes) {
+        if (modes == nullptr)
+          throw triton::exceptions::PathManager("PathManager::PathManager(): The modes API cannot be null.");
+        this->modes = modes;
       }
 
 
@@ -30,6 +32,7 @@ namespace triton {
 
 
       void PathManager::copy(const PathManager& other) {
+        this->modes           = other.modes;
         this->pathConstraints = other.pathConstraints;
       }
 
@@ -78,11 +81,11 @@ namespace triton {
           throw triton::exceptions::PathManager("PathManager::addPathConstraint(): The PC node cannot be null.");
 
         /* If PC_TRACKING_SYMBOLIC is enabled, Triton will track path constraints only if they are symbolized. */
-        if (triton::api.isSymbolicOptimizationEnabled(triton::engines::symbolic::PC_TRACKING_SYMBOLIC) && !pc->isSymbolized())
+        if (this->modes->isModeEnabled(triton::modes::PC_TRACKING_SYMBOLIC) && !pc->isSymbolized())
           return;
 
         /* If ONLY_ON_TAINTED is enabled and the expression untainted, Triton will skip the storing process. */
-        if (triton::api.isSymbolicOptimizationEnabled(triton::engines::symbolic::ONLY_ON_TAINTED) && !expr->isTainted)
+        if (this->modes->isModeEnabled(triton::modes::ONLY_ON_TAINTED) && !expr->isTainted)
           return;
 
         /* Basic block taken */

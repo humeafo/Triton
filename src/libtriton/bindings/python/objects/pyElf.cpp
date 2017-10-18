@@ -5,12 +5,11 @@
 **  This program is under the terms of the BSD License.
 */
 
-#ifdef TRITON_PYTHON_BINDINGS
-
-#include <elf.hpp>
-#include <pythonObjects.hpp>
-#include <pythonUtils.hpp>
-#include <pythonXFunctions.hpp>
+#include <triton/pythonObjects.hpp>
+#include <triton/pythonUtils.hpp>
+#include <triton/pythonXFunctions.hpp>
+#include <triton/elf.hpp>
+#include <triton/exceptions.hpp>
 
 
 
@@ -84,37 +83,37 @@ libc.so.6
 \section Elf_py_api Python API - Methods of the Elf class
 <hr>
 
-- **getDynamicTable(void)**<br>
-Returns dynamic table entries as list of \ref py_ElfDynamicTable_page.
+- <b>[\ref py_ElfDynamicTable_page, ...] getDynamicTable(void)</b><br>
+Returns the list of dynamic table entries.
 
-- **getHeader(void)**<br>
-Returns the ELF header as \ref py_ElfHeader_page.
+- <b>\ref py_ElfHeader_page getHeader(void)</b><br>
+Returns the ELF header.
 
-- **getPath(void)**<br>
-Returns the path as string of the parsed binary.<br>
+- <b>string getPath(void)</b><br>
+Returns the path of the parsed binary.<br>
 e.g: `/usr/bin/gdb`
 
-- **getProgramHeaders(void)**<br>
-Returns program headers as list of \ref py_ElfProgramHeader_page.
+- <b>[\ref py_ElfProgramHeader_page, ...] getProgramHeaders(void)</b><br>
+Returns the list of program headers.
 
-- **getRaw(void)**<br>
-Returns the raw binary as bytes.
+- <b>bytes getRaw(void)</b><br>
+Returns the raw binary.
 
-- **getRelocationTable(void)**<br>
-Returns relocations table entries as list of \ref py_ElfRelocationTable_page.
+- <b>[\ref py_ElfRelocationTable_page, ...] getRelocationTable(void)</b><br>
+Returns the list of relocations table entries.
 
-- **getSectionHeaders(void)**<br>
-Returns section headers as list of \ref py_ElfSectionHeader_page.
+- <b>[\ref py_ElfSectionHeader_page, ...] getSectionHeaders(void)</b><br>
+Returns the list of section headers.
 
-- **getSharedLibraries(void)**<br>
-Returns the list of shared libraries dependency as list of string.<br>
+- <b>[string, ...] getSharedLibraries(void)</b><br>
+Returns the list of shared library dependencies.<br>
 e.g: `["libc.so.6", "libncurses.so.5"]`
 
-- **getSize(void)**<br>
+- <b>integer getSize(void)</b><br>
 Returns the binary size.
 
-- **getSymbolsTable(void)**<br>
-Returns symbols table entries as list of \ref py_ElfSymbolTable_page.
+- <b>[\ref py_ElfSymbolTable_page, ...] getSymbolsTable(void)</b><br>
+Returns the list of symbols table entries.
 
 */
 
@@ -142,7 +141,7 @@ namespace triton {
             PyList_SetItem(ret, i, PyElfDynamicTable(dyn[i]));
           }
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
 
@@ -154,7 +153,7 @@ namespace triton {
         try {
           return PyElfHeader(PyElf_AsElf(self)->getHeader());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -164,7 +163,7 @@ namespace triton {
         try {
           return PyString_FromString(PyElf_AsElf(self)->getPath().c_str());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -180,7 +179,7 @@ namespace triton {
             PyList_SetItem(ret, i, PyElfProgramHeader(phdr[i]));
           }
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
 
@@ -194,7 +193,7 @@ namespace triton {
           triton::usize size       = PyElf_AsElf(self)->getSize();
           return PyBytes_FromStringAndSize(reinterpret_cast<const char*>(raw), size);
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -210,7 +209,7 @@ namespace triton {
             PyList_SetItem(ret, i, PyElfRelocationTable(rel[i]));
           }
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
 
@@ -228,7 +227,7 @@ namespace triton {
             PyList_SetItem(ret, i, PyElfSectionHeader(shdr[i]));
           }
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
 
@@ -246,7 +245,7 @@ namespace triton {
             PyList_SetItem(ret, i, xPyString_FromString(lib[i].c_str()));
           }
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
 
@@ -258,7 +257,7 @@ namespace triton {
         try {
           return PyLong_FromUsize(PyElf_AsElf(self)->getSize());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -274,7 +273,7 @@ namespace triton {
             PyList_SetItem(ret, i, PyElfSymbolTable(sym[i]));
           }
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
 
@@ -364,5 +363,3 @@ namespace triton {
     }; /* python namespace */
   }; /* bindings namespace */
 }; /* triton namespace */
-
-#endif /* TRITON_PYTHON_BINDINGS */

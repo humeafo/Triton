@@ -14,8 +14,8 @@
 #include <pin.H>
 
 /* libTriton */
-#include <api.hpp>
-#include <pythonBindings.hpp>
+#include <triton/api.hpp>
+#include <triton/pythonBindings.hpp>
 
 /* Pintool */
 #include "bindings.hpp"
@@ -35,7 +35,7 @@
 The new design of the Triton library (since the `v0.3`), allows you to plug any kind of tracers. E.g: Pin,
 Valgrind and even a database.
 
-<p align="center"><img src="http://triton.quarkslab.com/files/triton_v03_architecture.png"/></p>
+<p align="center"><img src="https://triton.quarkslab.com/files/triton_v03_architecture.png"/></p>
 
 To use the `libTriton`, your tracer must provide two kinds of information at each program point:
 
@@ -89,43 +89,37 @@ if __name__ == '__main__':
         inst.setAddress(regs['rip'])
 
         # Update concrete register state
-        inst.updateContext(Register(REG.RAX,    regs['rax']))
-        inst.updateContext(Register(REG.RBX,    regs['rbx']))
-        inst.updateContext(Register(REG.RCX,    regs['rcx']))
-        inst.updateContext(Register(REG.RDX,    regs['rdx']))
-        inst.updateContext(Register(REG.RDI,    regs['rdi']))
-        inst.updateContext(Register(REG.RSI,    regs['rsi']))
-        inst.updateContext(Register(REG.RBP,    regs['rbp']))
-        inst.updateContext(Register(REG.RSP,    regs['rsp']))
-        inst.updateContext(Register(REG.RIP,    regs['rip']))
-        inst.updateContext(Register(REG.R8,     regs['r8']))
-        inst.updateContext(Register(REG.R9,     regs['r9']))
-        inst.updateContext(Register(REG.R10,    regs['r10']))
-        inst.updateContext(Register(REG.R11,    regs['r11']))
-        inst.updateContext(Register(REG.R12,    regs['r12']))
-        inst.updateContext(Register(REG.R13,    regs['r13']))
-        inst.updateContext(Register(REG.R14,    regs['r14']))
-        inst.updateContext(Register(REG.R15,    regs['r15']))
-        inst.updateContext(Register(REG.EFLAGS, regs['eflags']))
+        setConcreteRegisterValue(Register(REG.RAX,    regs['rax']))
+        setConcreteRegisterValue(Register(REG.RBX,    regs['rbx']))
+        setConcreteRegisterValue(Register(REG.RCX,    regs['rcx']))
+        setConcreteRegisterValue(Register(REG.RDX,    regs['rdx']))
+        setConcreteRegisterValue(Register(REG.RDI,    regs['rdi']))
+        setConcreteRegisterValue(Register(REG.RSI,    regs['rsi']))
+        setConcreteRegisterValue(Register(REG.RBP,    regs['rbp']))
+        setConcreteRegisterValue(Register(REG.RSP,    regs['rsp']))
+        setConcreteRegisterValue(Register(REG.RIP,    regs['rip']))
+        setConcreteRegisterValue(Register(REG.R8,     regs['r8']))
+        setConcreteRegisterValue(Register(REG.R9,     regs['r9']))
+        setConcreteRegisterValue(Register(REG.R10,    regs['r10']))
+        setConcreteRegisterValue(Register(REG.R11,    regs['r11']))
+        setConcreteRegisterValue(Register(REG.R12,    regs['r12']))
+        setConcreteRegisterValue(Register(REG.R13,    regs['r13']))
+        setConcreteRegisterValue(Register(REG.R14,    regs['r14']))
+        setConcreteRegisterValue(Register(REG.R15,    regs['r15']))
+        setConcreteRegisterValue(Register(REG.EFLAGS, regs['eflags']))
+        setConcreteRegisterValue(Register(REG.FS,     regs['fs'])) # The mapped base address
+        setConcreteRegisterValue(Register(REG.GS,     regs['gs'])) # The mapped base address
 
         # Update concrete memory access
         accesses = db.get_memory_access_from_inst_id(inst_id)
 
-        # Read before write
+        # Update memory access
         for access in accesses:
             if access['kind'] == 'R':
                 address = access['addr']
                 data    = access['data']
                 value   = struct.unpack(unpack_size[len(data)], data)[0]
-                inst.updateContext(MemoryAccess(address, len(data), value))
-
-        # Write after read
-        for access in accesses:
-            if access['kind'] == 'W':
-                address = access['addr']
-                data    = access['data']
-                value   = struct.unpack(unpack_size[len(data)], data)[0]
-                inst.updateContext(MemoryAccess(address, len(data), value))
+                setConcreteMemoryValue(MemoryAccess(address, len(data), value))
 
         # Process everything (build IR, spread taint, perform simplification, ...)
         processing(inst)
@@ -145,8 +139,8 @@ if __name__ == '__main__':
 ~~~~~~~~~~~~~
 
 The database connection is a pure example to show you how to interact with the Triton API. As Triton is written in `C++`, you can directly
-create your Triton instruction inside a DBI engine (like Pin or Valgrind). According to your tracer, you can refer to the [Python](http://triton.quarkslab.com/documentation/doxygen/py_triton_page.html)
-or the [C++](http://triton.quarkslab.com/documentation/doxygen/classtriton_1_1API.html) API.
+create your Triton instruction inside a DBI engine (like Pin or Valgrind). According to your tracer, you can refer to the [Python](https://triton.quarkslab.com/documentation/doxygen/py_triton_page.html)
+or the [C++](https://triton.quarkslab.com/documentation/doxygen/classtriton_1_1API.html) API.
 
 \section Tracer_pintool The Triton's pintool
 <hr>
@@ -245,7 +239,7 @@ if __name__ == '__main__':
 ##
 ## Output:
 ##
-##  $ ./triton ./src/examples/pin/runtime_register_modification.py ./src/samples/crackmes/crackme_xor a
+##  $ ./build/triton ./src/examples/pin/runtime_register_modification.py ./src/samples/crackmes/crackme_xor a
 ##  4005f9: mov dword ptr [rbp - 4], eax
 ##          ref!180 = ((_ extract 31 24) (_ bv0 32)) ; byte reference - MOV operation
 ##          ref!181 = ((_ extract 23 16) (_ bv0 32)) ; byte reference - MOV operation
@@ -315,7 +309,7 @@ from pintool import *
 
 # Output
 #
-# $ ./triton ./src/examples/pin/callback_image.py ./src/samples/ir_test_suite/ir
+# $ ./build/triton ./src/examples/pin/callback_image.py ./src/samples/ir_test_suite/ir
 # ----------
 # Image path:  /dir/Triton/samples/ir_test_suite/ir
 # Image base:  0x400000L
@@ -361,7 +355,7 @@ from pintool import *
 
 # Output
 #
-# $ ./triton ./src/examples/pin/callback_routine.py  ./src/samples/vulns/testSuite
+# $ ./build/triton ./src/examples/pin/callback_routine.py  ./src/samples/vulns/testSuite
 # -> malloc(0x20)
 # <- 0x8fc010
 # -> malloc(0x20)
@@ -405,7 +399,7 @@ from pintool import *
 
 # Output
 #
-#  $ ./triton ./src/examples/pin/callback_signals.py ./src/samples/others/signals
+#  $ ./build/triton ./src/examples/pin/callback_signals.py ./src/samples/others/signals
 #  Signal 11 received on thread 0.
 #  ========================== DUMP ==========================
 #  rax:    0x00000000000000                        ((_ zero_extend 32) (_ bv234 32))
@@ -488,7 +482,7 @@ from pintool import *
 
 # Output
 #
-# $ ./triton examples/callback_syscall.py  ./samples/crackmes/crackme_xor a
+# $ ./build/triton examples/callback_syscall.py  ./samples/crackmes/crackme_xor a
 # sys_write(1, 7fb7f06e1000, 6)
 # loose
 #
@@ -544,7 +538,6 @@ namespace tracer {
 
     /* Callback before instruction processing */
     static void callbackBefore(triton::arch::Instruction* tritonInst, triton::uint8* addr, triton::uint32 size, CONTEXT* ctx, THREADID threadId) {
-
       /* Some configurations must be applied before processing */
       tracer::pintool::callbacks::preProcessing(tritonInst, threadId);
 
@@ -564,15 +557,8 @@ namespace tracer {
       tritonInst->setAddress(reinterpret_cast<triton::__uint>(addr));
       tritonInst->setThreadId(reinterpret_cast<triton::uint32>(threadId));
 
-      /* Setup the concrete context */
-      tracer::pintool::context::setupContextRegister(tritonInst, ctx);
-
       /* Disassemble the instruction */
       triton::api.disassembly(*tritonInst);
-
-      /* Trust operands */
-      for (auto op = tritonInst->operands.begin(); op != tritonInst->operands.end(); op++)
-        op->setTrust(true);
 
       /* Execute the Python callback before the IR processing */
       if (tracer::pintool::context::mustBeExecuted == false)
@@ -585,6 +571,9 @@ namespace tracer {
         tritonInst->reset();
         tracer::pintool::context::executeContext();
       }
+
+      /* Synchronize gliches between Pintool and libTriton */
+      tracer::pintool::context::synchronizeContext();
 
       /* Process the IR and taint */
       triton::api.buildSemantics(*tritonInst);
@@ -602,10 +591,6 @@ namespace tracer {
       /* Some configurations must be applied after processing */
       tracer::pintool::callbacks::postProcessing(tritonInst, threadId);
 
-      /* Untrust operands */
-      for (auto op = tritonInst->operands.begin(); op != tritonInst->operands.end(); op++)
-        op->setTrust(false);
-
       /* Mutex */
       PIN_UnlockClient();
     }
@@ -613,7 +598,6 @@ namespace tracer {
 
     /* Callback after instruction processing */
     static void callbackAfter(triton::arch::Instruction* tritonInst, CONTEXT* ctx, THREADID threadId) {
-
       if (!tracer::pintool::analysisTrigger.getState() || threadId != tracer::pintool::options::targetThreadId)
       /* Analysis locked */
         return;
@@ -651,7 +635,7 @@ namespace tracer {
       /* Mutex */
       PIN_LockClient();
       triton::uint512 value = tracer::pintool::context::getCurrentMemoryValue(addr, size);
-      tritonInst->updateContext(triton::arch::MemoryAccess(addr, size, value));
+      triton::api.setConcreteMemoryValue(triton::arch::MemoryAccess(addr, size, value));
       /* Mutex */
       PIN_UnlockClient();
     }
@@ -815,7 +799,8 @@ namespace tracer {
       /* Lock / Unlock the Analysis from a Entry point */
       if (tracer::pintool::options::startAnalysisFromEntry) {
         tracer::pintool::options::startAnalysisFromEntry = false;
-        tracer::pintool::options::startAnalysisFromAddress.insert(IMG_Entry(img));
+        /* IMG_LoadOffset(img) + IMG_Entry(img) for PIE binaries (see #524) */
+        tracer::pintool::options::startAnalysisFromAddress.insert(IMG_LoadOffset(img) + IMG_Entry(img));
       }
 
       /* Lock / Unlock the Analysis from a symbol */
@@ -965,15 +950,6 @@ namespace tracer {
               IARG_PTR, tritonInst,
               IARG_MEMORYREAD2_EA,
               IARG_MEMORYREAD_SIZE,
-              IARG_END);
-          }
-
-          /* Save memory write informations */
-          if (INS_IsMemoryWrite(ins)) {
-            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)saveMemoryAccess,
-              IARG_PTR, tritonInst,
-              IARG_MEMORYWRITE_EA,
-              IARG_MEMORYWRITE_SIZE,
               IARG_END);
           }
 

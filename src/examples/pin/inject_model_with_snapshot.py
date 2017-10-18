@@ -1,5 +1,5 @@
 
-# $ ./triton ./src/examples/pin/inject_model_with_snapshot.py ./src/samples/crackmes/crackme_xor a
+# $ ./build/triton ./src/examples/pin/inject_model_with_snapshot.py ./src/samples/crackmes/crackme_xor a
 # [+] Take a snapshot at the prologue of the function
 # [+] Still not the good password. Restore snapshot.
 # [+] Inject the character 'e' in memory
@@ -25,9 +25,9 @@
 # Win
 # [+] Analysis done!
 
-from triton  import *
-from ast     import *
-from pintool import *
+from triton     import *
+from triton.ast import *
+from pintool    import *
 
 password  = dict()
 symVarMem = None

@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 ## -*- coding: utf-8 -*-
 ##
-## $ ./triton ./src/examples/pin/ast_dictionaries.py ./src/samples/crackmes/crackme_xor elite
+## $ ./build/triton ./src/examples/pin/ast_dictionaries.py ./src/samples/crackmes/crackme_xor elite
 ##
 
 import sys
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     startAnalysisFromEntry()
 
     # Use AST Dictionaries
-    enableSymbolicOptimization(OPTIMIZATION.AST_DICTIONARIES, True)
+    enableMode(MODE.AST_DICTIONARIES, True)
 
     # Add callbacks
     insertCall(cb_fini, INSERT_POINT.FINI)

@@ -5,8 +5,8 @@
 **  This program is under the terms of the BSD License.
 */
 
-#include <exceptions.hpp>
-#include <operandWrapper.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/operandWrapper.hpp>
 
 
 
@@ -28,7 +28,7 @@ namespace triton {
     OperandWrapper::OperandWrapper(const triton::arch::Register& reg) {
       this->reg = reg;
       this->type = triton::arch::OP_REG;
-    };
+    }
 
 
     OperandWrapper::~OperandWrapper() {
@@ -145,34 +145,42 @@ namespace triton {
     }
 
 
-    bool OperandWrapper::isTrusted(void) const {
-      switch (this->getType()) {
-        case triton::arch::OP_IMM: return true;
-        case triton::arch::OP_MEM: return this->getConstMemory().isTrusted();
-        case triton::arch::OP_REG: return this->getConstRegister().isTrusted();
-        default:
-          throw triton::exceptions::OperandWrapper("OperandWrapper::isTrusted(): Invalid type operand.");
-      }
-      return false;
-    }
-
-
-    void OperandWrapper::setTrust(bool flag) {
-      switch (this->getType()) {
-        case triton::arch::OP_IMM: break;
-        case triton::arch::OP_MEM: this->getMemory().setTrust(flag); break;
-        case triton::arch::OP_REG: this->getRegister().setTrust(flag); break;
-        default:
-          throw triton::exceptions::OperandWrapper("OperandWrapper::setTrust(): Invalid type operand.");
-      }
-    }
-
-
     void OperandWrapper::operator=(const OperandWrapper& other) {
       this->imm  = other.imm;
       this->mem  = other.mem;
       this->reg  = other.reg;
       this->type = other.type;
+    }
+
+
+    bool OperandWrapper::operator==(const OperandWrapper& other) const {
+      if (this->type != other.type)
+        return false;
+
+      switch (this->getType()) {
+        case triton::arch::OP_IMM: return this->imm == other.imm;
+        case triton::arch::OP_MEM: return this->mem == other.mem;
+        case triton::arch::OP_REG: return this->reg == other.reg;
+        default:
+          throw triton::exceptions::OperandWrapper("OperandWrapper::operator==(): Invalid type operand.");
+      }
+    }
+
+
+    bool OperandWrapper::operator<(const OperandWrapper& other) const {
+      if (this->type < other.type)
+        return true;
+
+      if (this->type > other.type)
+        return false;
+
+      switch (this->getType()) {
+        case triton::arch::OP_IMM: return this->imm < other.imm;
+        case triton::arch::OP_MEM: return this->mem < other.mem;
+        case triton::arch::OP_REG: return this->reg < other.reg;
+        default:
+          throw triton::exceptions::OperandWrapper("OperandWrapper::operator==(): Invalid type operand.");
+      }
     }
 
 

@@ -1,8 +1,8 @@
 # $ ./triton ./src/testers/qemu-test-x86_64.py ./src/samples/ir_test_suite/qemu-test-x86_64
 
-from triton  import *
-from ast     import *
-from pintool import *
+from triton     import *
+from triton.ast import *
+from pintool    import *
 
 import sys
 import time
@@ -15,6 +15,18 @@ def sbefore(instruction):
 
 
 def cafter(instruction):
+
+    ofIgnored = [
+        OPCODE.RCL,
+        OPCODE.RCR,
+        OPCODE.ROL,
+        OPCODE.ROR,
+        OPCODE.SAR,
+        OPCODE.SHL,
+        OPCODE.SHLD,
+        OPCODE.SHR,
+        OPCODE.SHRD,
+    ]
 
     bad  = list()
     regs = getParentRegisters()
@@ -34,7 +46,7 @@ def cafter(instruction):
         # Check register
         if cvalue != svalue:
 
-            if reg.getName() == 'of' and instruction.getType() in [OPCODE.SHL, OPCODE.SHR, OPCODE.SAR, OPCODE.RCL, OPCODE.RCR, OPCODE.ROL, OPCODE.ROR]:
+            if reg.getName() == 'of' and instruction.getType() in ofIgnored:
                 continue
 
             bad.append({

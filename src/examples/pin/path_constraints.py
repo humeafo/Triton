@@ -1,25 +1,25 @@
 #!/usr/bin/env python2
 ## -*- coding: utf-8 -*-
 ##
-##  $ ./triton ./src/examples/pin/path_constraints.py ./src/samples/crackmes/crackme_xor a
+##  $ ./build/triton ./src/examples/pin/path_constraints.py ./src/samples/crackmes/crackme_xor a
 ##  [+] 10 bytes tainted from the argv[1] (0x7ffd4a50c60e) pointer
 ##  loose
 ##  B1: SymVar_0 = 65 (e)  |  B2: SymVar_0 = 0 ()
 ##
-##  $ ./triton ./src/examples/pin/path_constraints.py ./src/samples/crackmes/crackme_xor e
+##  $ ./build/triton ./src/examples/pin/path_constraints.py ./src/samples/crackmes/crackme_xor e
 ##  [+] 10 bytes tainted from the argv[1] (0x7fff0b23160e) pointer
 ##  loose
 ##  B1: SymVar_0 = 65 (e)  |  B2: SymVar_0 = 0 ()
 ##  B1: SymVar_1 = 6C (l)  |  B2: SymVar_1 = 0 ()
 ##
-##  $ ./triton ./src/examples/pin/path_constraints.py ./src/samples/crackmes/crackme_xor el
+##  $ ./build/triton ./src/examples/pin/path_constraints.py ./src/samples/crackmes/crackme_xor el
 ##  [+] 10 bytes tainted from the argv[1] (0x7ffda0d4e60d) pointer
 ##  loose
 ##  B1: SymVar_0 = 65 (e)  |  B2: SymVar_0 = 0 ()
 ##  B1: SymVar_1 = 6C (l)  |  B2: SymVar_1 = 0 ()
 ##  B1: SymVar_2 = 69 (i)  |  B2: SymVar_2 = 0 ()
 ##
-##  $ ./triton ./src/examples/pin/path_constraints.py ./src/samples/crackmes/crackme_xor eli
+##  $ ./build/triton ./src/examples/pin/path_constraints.py ./src/samples/crackmes/crackme_xor eli
 ##  [+] 10 bytes tainted from the argv[1] (0x7ffc18b6f60c) pointer
 ##  loose
 ##  B1: SymVar_0 = 65 (e)  |  B2: SymVar_0 = 0 ()
@@ -27,7 +27,7 @@
 ##  B1: SymVar_2 = 69 (i)  |  B2: SymVar_2 = 0 ()
 ##  B1: SymVar_3 = 74 (t)  |  B2: SymVar_3 = 0 ()
 ##
-##  $ ./triton ./src/examples/pin/path_constraints.py ./src/samples/crackmes/crackme_xor elit
+##  $ ./build/triton ./src/examples/pin/path_constraints.py ./src/samples/crackmes/crackme_xor elit
 ##  [+] 10 bytes tainted from the argv[1] (0x7ffcf797160b) pointer
 ##  loose
 ##  B1: SymVar_0 = 65 (e)  |  B2: SymVar_0 = 0 ()
@@ -36,7 +36,7 @@
 ##  B1: SymVar_3 = 74 (t)  |  B2: SymVar_3 = 0 ()
 ##  B1: SymVar_4 = 65 (e)  |  B2: SymVar_4 = 0 ()
 ##
-##  $ ./triton ./src/examples/pin/path_constraints.py ./src/samples/crackmes/crackme_xor elite
+##  $ ./build/triton ./src/examples/pin/path_constraints.py ./src/samples/crackmes/crackme_xor elite
 ##  [+] 10 bytes tainted from the argv[1] (0x7ffdfa2d260a) pointer
 ##  Win
 ##  B1: SymVar_0 = 65 (e)  |  B2: SymVar_0 = 0 ()
@@ -46,9 +46,9 @@
 ##  B1: SymVar_4 = 65 (e)  |  B2: SymVar_4 = 0 ()
 ##
 
-from triton  import *
-from ast     import *
-from pintool import *
+from triton     import *
+from triton.ast import *
+from pintool    import *
 
 TAINTING_SIZE = 10
 
@@ -59,7 +59,7 @@ def tainting(threadId):
     rsi = getCurrentRegisterValue(REG.RSI) # argv
 
     while rdi > 1:
-        argv = getCurrentMemoryValue(rsi + ((rdi-1) * CPUSIZE.REG), CPUSIZE.REG)
+        argv = getCurrentMemoryValue(rsi + ((rdi-1) * CPUSIZE.QWORD), CPUSIZE.QWORD)
         offset = 0
         while offset != TAINTING_SIZE:
             taintMemory(argv + offset)
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     startAnalysisFromSymbol('main')
 
     # Align the memory
-    enableSymbolicOptimization(OPTIMIZATION.ALIGNED_MEMORY, True)
+    enableMode(MODE.ALIGNED_MEMORY, True)
 
     # Only perform the symbolic execution on the target binary
     setupImageWhitelist(['crackme_xor'])

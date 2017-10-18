@@ -230,15 +230,18 @@ def emulate(pc):
 
 
 # Memory caching on the fly to speed up the dump loading.
-def memoryCaching(addr):
+def memoryCaching(mem):
     global memoryCache
 
-    if not isMemoryMapped(addr):
-        for r in memoryCache:
-            if addr >= r['start'] and addr < r['start'] + r['size']:
-                value = ord(r['memory'][addr-r['start']])
-                setConcreteMemoryValue(addr, value)
-                return
+    addr = mem.getAddress()
+    size = mem.getSize()
+    for index in range(size):
+        if not isMemoryMapped(addr+index):
+            for r in memoryCache:
+                if addr+index >= r['start'] and addr+index < r['start'] + r['size']:
+                    value = ord(r['memory'][((addr+index)-r['start'])])
+                    setConcreteMemoryValue(addr+index, value)
+                    return
 
     return
 
@@ -255,11 +258,11 @@ def initialize():
     setArchitecture(ARCH.X86_64)
 
     # Define symbolic optimizations
-    enableSymbolicOptimization(OPTIMIZATION.ALIGNED_MEMORY, True)
-    enableSymbolicOptimization(OPTIMIZATION.ONLY_ON_SYMBOLIZED, True)
+    enableMode(MODE.ALIGNED_MEMORY, True)
+    enableMode(MODE.ONLY_ON_SYMBOLIZED, True)
 
     # Define internal callbacks.
-    addCallback(memoryCaching,   CALLBACK.MEMORY_HIT)
+    addCallback(memoryCaching,   CALLBACK.GET_CONCRETE_MEMORY_VALUE)
     addCallback(constantFolding, CALLBACK.SYMBOLIC_SIMPLIFICATION)
 
     # Load the meory dump

@@ -5,12 +5,12 @@
 **  This program is under the terms of the BSD License.
 */
 
-#ifdef TRITON_PYTHON_BINDINGS
 
-#include <pythonObjects.hpp>
-#include <pythonUtils.hpp>
-#include <pythonXFunctions.hpp>
-#include <symbolicVariable.hpp>
+#include <triton/pythonObjects.hpp>
+#include <triton/pythonUtils.hpp>
+#include <triton/pythonXFunctions.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/symbolicVariable.hpp>
 
 
 
@@ -22,7 +22,7 @@
 \section py_SymbolicVariable_description Description
 <hr>
 
-This object is used to represent a symbolic variable contained in a \ref py_SymbolicExpression_page.
+This object is used to represent a symbolic variable.
 
 ~~~~~~~~~~~~~{.py}
 >>> symvar = convertRegisterToSymbolicVariable(REG.RAX)
@@ -33,37 +33,37 @@ SymVar_0:64
 \section SymbolicVariable_py_api Python API - Methods of the SymbolicVariable class
 <hr>
 
-- **getBitSize(void)**<br>
-Returns the size of the symbolic variable as integer.
+- <b>integer getBitSize(void)</b><br>
+Returns the size of the symbolic variable.
 
-- **getComment(void)**<br>
-Returns the comment (if exists) of the symbolic variable as string.
+- <b>string getComment(void)</b><br>
+Returns the comment (if exists) of the symbolic variable.
 
-- **getConcreteValue(void)**<br>
+- <b>integer getConcreteValue(void)</b><br>
 Returns the concrete value (if exists) of the symbolic variable.
 
-- **getId(void)**<br>
-Returns the id of the symbolic variable as integer. This id is always unique.<br>
+- <b>integer getId(void)</b><br>
+Returns the id of the symbolic variable. This id is always unique.<br>
 e.g: `18`
 
-- **getKind(void)**<br>
-Returns the kind of the symbolic variable as \ref py_SYMEXPR_page.<br>
+- <b>\ref py_SYMEXPR_page getKind(void)</b><br>
+Returns the kind of the symbolic variable.<br>
 e.g: `SYMEXPR.REG`
 
-- **getKindValue(void)**<br>
+- <b>integer getKindValue(void)</b><br>
 Returns the kind value according to the \ref py_SYMEXPR_page.<br>
-If `getKind()` returns triton::engines::symbolic::REG, so `getKindValue()` returns the if of the register.<br>
+If `getKind()` returns triton::engines::symbolic::REG, so `getKindValue()` returns the id of the register.<br>
 Otherwise, if `getKind()` returns triton::engines::symbolic::MEM, so `getKindValue()` returns the address of the memory access.<br>
 Then, if `getKind()` returns triton::engines::symbolic::UNDEF, so `getKindValue()` returns `0`.
 
-- **getName(void)**<br>
-Returns name of the the symbolic variable as string.<br>
+- <b>string getName(void)</b><br>
+Returns name of the the symbolic variable.<br>
 e.g: `SymVar_18`
 
-- **setComment(string comment)**<br>
-Sets a comment of the symbolic variable.
+- <b>void setComment(string comment)</b><br>
+Sets a comment to the symbolic variable.
 
-- **setConcreteValue(integer value)**<br>
+- <b>void setConcreteValue(integer value)</b><br>
 Sets a concrete value. `value` must be less than 512-bits.
 
 */
@@ -85,7 +85,7 @@ namespace triton {
         try {
           return PyLong_FromUint32(PySymbolicVariable_AsSymbolicVariable(self)->getKind());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -95,7 +95,7 @@ namespace triton {
         try {
           return Py_BuildValue("s", PySymbolicVariable_AsSymbolicVariable(self)->getName().c_str());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -105,7 +105,7 @@ namespace triton {
         try {
           return PyLong_FromUsize(PySymbolicVariable_AsSymbolicVariable(self)->getId());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -115,7 +115,7 @@ namespace triton {
         try {
           return PyLong_FromUint64(PySymbolicVariable_AsSymbolicVariable(self)->getKindValue());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -125,7 +125,7 @@ namespace triton {
         try {
           return PyLong_FromUint32(PySymbolicVariable_AsSymbolicVariable(self)->getSize());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -135,7 +135,7 @@ namespace triton {
         try {
           return Py_BuildValue("s", PySymbolicVariable_AsSymbolicVariable(self)->getComment().c_str());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -145,7 +145,7 @@ namespace triton {
         try {
           return PyLong_FromUint512(PySymbolicVariable_AsSymbolicVariable(self)->getConcreteValue());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -159,7 +159,7 @@ namespace triton {
           Py_INCREF(Py_None);
           return Py_None;
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -173,7 +173,7 @@ namespace triton {
           Py_INCREF(Py_None);
           return Py_None;
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -191,7 +191,7 @@ namespace triton {
           str << PySymbolicVariable_AsSymbolicVariable(self);
           return PyString_FromFormat("%s", str.str().c_str());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -283,5 +283,3 @@ namespace triton {
     }; /* python namespace */
   }; /* bindings namespace */
 }; /* triton namespace */
-
-#endif /* TRITON_PYTHON_BINDINGS */

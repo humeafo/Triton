@@ -5,14 +5,11 @@
 **  This program is under the terms of the BSD License.
 */
 
-#ifdef TRITON_PYTHON_BINDINGS
+#include <triton/pythonBindings.hpp>
+#include <triton/pythonXFunctions.hpp>
+#include <triton/pythonBindings.hpp>
 
 #include <iostream>
-
-#include <pythonBindings.hpp>
-#include <pythonXFunctions.hpp>
-#include <pythonBindings.hpp>
-
 
 
 namespace triton {
@@ -49,7 +46,7 @@ namespace triton {
 
         /* Create the ast module ===================================================================== */
 
-        triton::bindings::python::astModule = Py_InitModule("ast", astCallbacks);
+        triton::bindings::python::astModule = Py_InitModule("triton.ast", astCallbacks);
         if (triton::bindings::python::astModule == nullptr) {
           std::cerr << "Failed to initialize the ast bindings" << std::endl;
           PyErr_Print();
@@ -105,9 +102,15 @@ namespace triton {
 
         /* Create the OPTIMIZATION namespace ========================================================= */
 
-        PyObject* symOptiDict = xPyDict_New();
-        initSymOptiNamespace(symOptiDict);
-        PyObject* idSymOptiClass = xPyClass_New(nullptr, symOptiDict, xPyString_FromString("OPTIMIZATION"));
+        PyObject* modeDict = xPyDict_New();
+        initModeNamespace(modeDict);
+        PyObject* idModeClass = xPyClass_New(nullptr, modeDict, xPyString_FromString("MODE"));
+
+        /* Create the PE namespace ================================================================== */
+
+        PyObject* peDict = xPyDict_New();
+        initPENamespace(peDict);
+        PyObject* idPeDictClass = xPyClass_New(nullptr, peDict, xPyString_FromString("PE"));
 
         /* Create the PREFIX namespace =============================================================== */
 
@@ -141,23 +144,24 @@ namespace triton {
         /* Init triton module ======================================================================== */
 
         /* Add every modules and namespace into the triton module */
-        PyModule_AddObject(triton::bindings::python::tritonModule, "ast",                 triton::bindings::python::astModule);
         PyModule_AddObject(triton::bindings::python::tritonModule, "ARCH",                idArchDictClass);
         PyModule_AddObject(triton::bindings::python::tritonModule, "AST_NODE",            idAstNodeDictClass);
         PyModule_AddObject(triton::bindings::python::tritonModule, "AST_REPRESENTATION",  idAstRepresentationDictClass);
         PyModule_AddObject(triton::bindings::python::tritonModule, "CALLBACK",            idCallbackDictClass);
-        PyModule_AddObject(triton::bindings::python::tritonModule, "ELF",                 idElfDictClass);
         PyModule_AddObject(triton::bindings::python::tritonModule, "CPUSIZE",             idCpuSizeClass);            /* Empty: filled on the fly */
+        PyModule_AddObject(triton::bindings::python::tritonModule, "ELF",                 idElfDictClass);
+        PyModule_AddObject(triton::bindings::python::tritonModule, "MODE",                idModeClass);
         PyModule_AddObject(triton::bindings::python::tritonModule, "OPCODE",              idOpcodesClass);            /* Empty: filled on the fly */
         PyModule_AddObject(triton::bindings::python::tritonModule, "OPERAND",             idOperandClass);
-        PyModule_AddObject(triton::bindings::python::tritonModule, "OPTIMIZATION",        idSymOptiClass);
+        PyModule_AddObject(triton::bindings::python::tritonModule, "PE",                  idPeDictClass);
         PyModule_AddObject(triton::bindings::python::tritonModule, "PREFIX",              idPrefixesClass);           /* Empty: filled on the fly */
         PyModule_AddObject(triton::bindings::python::tritonModule, "REG",                 idRegClass);                /* Empty: filled on the fly */
         PyModule_AddObject(triton::bindings::python::tritonModule, "SYMEXPR",             idSymExprClass);
-        PyModule_AddObject(triton::bindings::python::tritonModule, "VERSION",             idVersionClass);
         #if defined(__unix__) || defined(__APPLE__)
         PyModule_AddObject(triton::bindings::python::tritonModule, "SYSCALL",             idSyscallsClass);           /* Empty: filled on the fly */
         #endif
+        PyModule_AddObject(triton::bindings::python::tritonModule, "VERSION",             idVersionClass);
+        PyModule_AddObject(triton::bindings::python::tritonModule, "ast",                 triton::bindings::python::astModule);
 
         triton::bindings::python::initialized = true;
       }
@@ -165,6 +169,4 @@ namespace triton {
     }; /* python namespace */
   }; /* bindings namespace */
 }; /* triton namespace */
-
-#endif /* TRITON_PYTHON_BINDINGS */
 

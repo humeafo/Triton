@@ -5,9 +5,9 @@
 **  This program is under the terms of the BSD License.
 */
 
-#include <bitsVector.hpp>
-#include <cpuSize.hpp>
-#include <exceptions.hpp>
+#include <triton/bitsVector.hpp>
+#include <triton/cpuSize.hpp>
+#include <triton/exceptions.hpp>
 
 
 
@@ -21,8 +21,7 @@ namespace triton {
 
 
     BitsVector::BitsVector(triton::uint32 high /* bits */, triton::uint32 low /* bits */) {
-      this->high = high;
-      this->low  = low;
+      this->setPair(std::make_pair(high, low));
     }
 
 
@@ -33,11 +32,6 @@ namespace triton {
 
 
     BitsVector::~BitsVector() {
-    }
-
-
-    std::pair<triton::uint32, triton::uint32> BitsVector::getPair(void) const {
-      return std::make_pair(this->high, this->low);
     }
 
 

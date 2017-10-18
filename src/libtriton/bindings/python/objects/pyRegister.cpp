@@ -5,12 +5,11 @@
 **  This program is under the terms of the BSD License.
 */
 
-#ifdef TRITON_PYTHON_BINDINGS
-
-#include <pythonObjects.hpp>
-#include <pythonUtils.hpp>
-#include <pythonXFunctions.hpp>
-#include <register.hpp>
+#include <triton/pythonObjects.hpp>
+#include <triton/pythonUtils.hpp>
+#include <triton/pythonXFunctions.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/register.hpp>
 
 
 
@@ -60,52 +59,44 @@ ah:8 bv[15..8]
 
 >>> print hex(ah.getConcreteValue())
 0x18L
+
+>>> regId = 1
+>>> Register(regId)
+rax:64 bv[63..0]
 ~~~~~~~~~~~~~
 
 \section Register_py_api Python API - Methods of the Register class
 <hr>
 
-- **getBitSize(void)**<br>
-Returns the size (in bits) of the register as integer.<br>
+- <b>integer getBitSize(void)</b><br>
+Returns the size (in bits) of the register.<br>
 e.g: `64`
 
-- **getBitvector(void)**<br>
-Returns the bitvector as \ref py_Bitvector_page.
+- <b>\ref py_Bitvector_page getBitvector(void)</b><br>
+Returns the bitvector of the register.
 
-- **getConcreteValue(void)**<br>
+- <b>integer getConcreteValue(void)</b><br>
 Returns the concrete value assigned to this register operand.
 
-- **getName(void)**<br>
-Returns the name of the register as string.<br>
+- <b>string getName(void)</b><br>
+Returns the name of the register.<br>
 e.g: `rbx`
 
-- **getParent(void)**<br>
-Returns the parent register as \ref py_Register_page.
+- <b>\ref py_Register_page getParent(void)</b><br>
+Returns the parent register.
 
-- **getSize(void)**<br>
-Returns the size (in bytes) of the register as integer.<br>
+- <b>integer getSize(void)</b><br>
+Returns the size (in bytes) of the register.<br>
 e.g: `8`
 
-- **getType(void)**<br>
-Returns type of the register as \ref py_OPERAND_page. In this case this function returns `OPERAND.REG`.
+- <b>\ref py_OPERAND_page getType(void)</b><br>
+Returns type of the register. In this case this function returns `OPERAND.REG`.
 
-- **isValid(void)**<br>
-Returns true if the register is valid.
+- <b>bool isOverlapWith(\ref py_Register_page other)</b><br>
+Returns true if `other` and `self` overlap.
 
-- **isFlag(void)**<br>
-Returns true if the register is a flag.
-
-- **isRegister(void)**<br>
-Returns true if the register is a register.
-
-- **isTrusted(void)**<br>
-True if this concrete register value is trusted and synchronized with the real CPU value.
-
-- **setConcreteValue(integer value)**<br>
+- <b>void setConcreteValue(integer value)</b><br>
 Sets a concrete value to this register.
-
-- **setTrust(bool flag)**<br>
-Sets the trust flag.
 
 */
 
@@ -127,7 +118,7 @@ namespace triton {
         try {
           return PyLong_FromUint32(PyRegister_AsRegister(self)->getBitSize());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -137,7 +128,7 @@ namespace triton {
         try {
           return PyBitvector(*PyRegister_AsRegister(self));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -147,7 +138,7 @@ namespace triton {
         try {
           return PyLong_FromUint512(PyRegister_AsRegister(self)->getConcreteValue());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -157,7 +148,7 @@ namespace triton {
         try {
           return Py_BuildValue("s", PyRegister_AsRegister(self)->getName().c_str());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -168,7 +159,7 @@ namespace triton {
           triton::arch::Register parent = PyRegister_AsRegister(self)->getParent();
           return PyRegister(parent);
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -178,7 +169,7 @@ namespace triton {
         try {
           return PyLong_FromUint32(PyRegister_AsRegister(self)->getSize());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -188,88 +179,43 @@ namespace triton {
         try {
           return PyLong_FromUint32(PyRegister_AsRegister(self)->getType());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
 
 
-      static PyObject* Register_isValid(PyObject* self, PyObject* noarg) {
+      static PyObject* Register_isOverlapWith(PyObject* self, PyObject* reg2) {
         try {
-          if (PyRegister_AsRegister(self)->isValid())
+          triton::arch::Register* reg1;
+
+          if (!PyRegister_Check(reg2))
+            return PyErr_Format(PyExc_TypeError, "Register::isOverlapWith(): Expected a Register as argument.");
+
+          reg1 = PyRegister_AsRegister(self);
+          if (reg1->isOverlapWith(*PyRegister_AsRegister(reg2)))
             Py_RETURN_TRUE;
           Py_RETURN_FALSE;
         }
-        catch (const std::exception& e) {
-          return PyErr_Format(PyExc_TypeError, "%s", e.what());
-        }
-      }
-
-
-      static PyObject* Register_isRegister(PyObject* self, PyObject* noarg) {
-        try {
-          if (PyRegister_AsRegister(self)->isRegister())
-            Py_RETURN_TRUE;
-          Py_RETURN_FALSE;
-        }
-        catch (const std::exception& e) {
-          return PyErr_Format(PyExc_TypeError, "%s", e.what());
-        }
-      }
-
-
-      static PyObject* Register_isTrusted(PyObject* self, PyObject* noarg) {
-        try {
-          if (PyRegister_AsRegister(self)->isTrusted())
-            Py_RETURN_TRUE;
-          Py_RETURN_FALSE;
-        }
-        catch (const std::exception& e) {
-          return PyErr_Format(PyExc_TypeError, "%s", e.what());
-        }
-      }
-
-
-      static PyObject* Register_isFlag(PyObject* self, PyObject* noarg) {
-        try {
-          if (PyRegister_AsRegister(self)->isFlag())
-            Py_RETURN_TRUE;
-          Py_RETURN_FALSE;
-        }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
 
 
       static PyObject* Register_setConcreteValue(PyObject* self, PyObject* value) {
+        triton::arch::Register* reg;
+
+        if (!PyLong_Check(value) && !PyInt_Check(value))
+          return PyErr_Format(PyExc_TypeError, "Register::setConcretevalue(): Expected an integer as argument.");
+
         try {
-          triton::arch::Register *reg;
-
-          if (!PyLong_Check(value) && !PyInt_Check(value))
-            return PyErr_Format(PyExc_TypeError, "Register::setConcretevalue(): Expected an integer as argument.");
-
           reg = PyRegister_AsRegister(self);
           reg->setConcreteValue(PyLong_AsUint512(value));
-
           Py_INCREF(Py_None);
           return Py_None;
         }
-        catch (const std::exception& e) {
-          return PyErr_Format(PyExc_TypeError, "%s", e.what());
-        }
-      }
-
-
-      static PyObject* Register_setTrust(PyObject* self, PyObject* flag) {
-        try {
-          if (!PyBool_Check(flag))
-            return PyErr_Format(PyExc_TypeError, "Register::setTrust(): Expected a boolean as argument.");
-          PyRegister_AsRegister(self)->setTrust(PyLong_AsBool(flag));
-          Py_INCREF(Py_None);
-          return Py_None;
-        }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -281,15 +227,61 @@ namespace triton {
       }
 
 
+      static long Register_hash(PyObject* self) {
+        return PyRegister_AsRegister(self)->getId();
+      }
+
+
       static PyObject* Register_str(PyObject* self) {
         try {
           std::stringstream str;
           str << PyRegister_AsRegister(self);
           return PyString_FromFormat("%s", str.str().c_str());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
+      }
+
+
+      static PyObject* Register_richcompare(PyObject* self, PyObject* other, int op)
+      {
+        PyObject* result    = nullptr;
+        triton::uint32 id1  = 0;
+        triton::uint32 id2  = 0;
+
+        if (!PyRegister_Check(other)) {
+          result = Py_NotImplemented;
+        }
+
+        else {
+          id1 = PyRegister_AsRegister(self)->getId();
+          id2 = PyRegister_AsRegister(other)->getId();
+
+          switch (op) {
+            case Py_LT:
+                result = (id1 <  id2) ? Py_True : Py_False;
+                break;
+            case Py_LE:
+                result = (id1 <= id2) ? Py_True : Py_False;
+                break;
+            case Py_EQ:
+                result = (id1 == id2) ? Py_True : Py_False;
+                break;
+            case Py_NE:
+                result = (id1 != id2) ? Py_True : Py_False;
+                break;
+            case Py_GT:
+                result = (id1 >  id2) ? Py_True : Py_False;
+                break;
+            case Py_GE:
+                result = (id1 >= id2) ? Py_True : Py_False;
+                break;
+          }
+        }
+
+        Py_INCREF(result);
+        return result;
       }
 
 
@@ -302,12 +294,8 @@ namespace triton {
         {"getParent",         Register_getParent,        METH_NOARGS,    ""},
         {"getSize",           Register_getSize,          METH_NOARGS,    ""},
         {"getType",           Register_getType,          METH_NOARGS,    ""},
-        {"isFlag",            Register_isFlag,           METH_NOARGS,    ""},
-        {"isRegister",        Register_isRegister,       METH_NOARGS,    ""},
-        {"isTrusted",         Register_isTrusted,        METH_NOARGS,    ""},
-        {"isValid",           Register_isValid,          METH_NOARGS,    ""},
+        {"isOverlapWith",     Register_isOverlapWith,    METH_O,         ""},
         {"setConcreteValue",  Register_setConcreteValue, METH_O,         ""},
-        {"setTrust",          Register_setTrust,         METH_O,         ""},
         {nullptr,             nullptr,                   0,              nullptr}
       };
 
@@ -327,7 +315,7 @@ namespace triton {
         0,                                          /* tp_as_number */
         0,                                          /* tp_as_sequence */
         0,                                          /* tp_as_mapping */
-        0,                                          /* tp_hash */
+        (hashfunc)Register_hash,                    /* tp_hash */
         0,                                          /* tp_call */
         (reprfunc)Register_str,                     /* tp_str */
         0,                                          /* tp_getattro */
@@ -337,7 +325,7 @@ namespace triton {
         "Register objects",                         /* tp_doc */
         0,                                          /* tp_traverse */
         0,                                          /* tp_clear */
-        0,                                          /* tp_richcompare */
+        (richcmpfunc)Register_richcompare,          /* tp_richcompare */
         0,                                          /* tp_weaklistoffset */
         0,                                          /* tp_iter */
         0,                                          /* tp_iternext */
@@ -375,8 +363,21 @@ namespace triton {
         return (PyObject*)object;
       }
 
+
+      PyObject* PyRegister(const triton::arch::Register& reg, triton::uint512 concreteValue) {
+        return PyRegister(reg, concreteValue, false);
+      }
+
+
+      PyObject* PyRegister(const triton::arch::Register& reg, triton::uint512 concreteValue, bool isImmutable) {
+        PyType_Ready(&Register_Type);
+        Register_Object* object = PyObject_NEW(Register_Object, &Register_Type);
+        if (object != NULL)
+          object->reg = new triton::arch::Register(reg.getId(), concreteValue, isImmutable);
+
+        return (PyObject*)object;
+      }
+
     }; /* python namespace */
   }; /* bindings namespace */
 }; /* triton namespace */
-
-#endif /* TRITON_PYTHON_BINDINGS */

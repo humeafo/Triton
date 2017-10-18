@@ -7,8 +7,8 @@
 
 #include <cstdlib>
 
-#include <solverModel.hpp>
-#include <symbolicVariable.hpp>
+#include <triton/solverModel.hpp>
+#include <triton/symbolicEnums.hpp>
 
 
 
@@ -17,15 +17,15 @@ namespace triton {
     namespace solver {
 
       SolverModel::SolverModel() {
+        this->id    = static_cast<triton::uint32>(-1);
         this->name  = "";
-        this->id    = -1;
         this->value = 0;
       }
 
 
       SolverModel::SolverModel(const std::string& name, triton::uint512 value) {
-        this->name  = name;
         this->id    = std::atoi(name.c_str() + TRITON_SYMVAR_NAME_SIZE);
+        this->name  = name;
         this->value = value;
       }
 
@@ -36,8 +36,8 @@ namespace triton {
 
 
       void SolverModel::copy(const SolverModel& other) {
-        this->name  = other.name;
         this->id    = other.id;
+        this->name  = other.name;
         this->value = other.value;
       }
 
@@ -67,7 +67,7 @@ namespace triton {
 
 
       std::ostream& operator<<(std::ostream& stream, const SolverModel& model) {
-        stream << model.getName() << " = " << std::hex << model.getValue() << std::dec;
+        stream << model.getName() << " = 0x" << std::hex << model.getValue() << std::dec;
         return stream;
       }
 

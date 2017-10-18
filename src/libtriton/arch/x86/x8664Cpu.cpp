@@ -7,28 +7,21 @@
 
 #include <cstring>
 
-#include <api.hpp>
-#include <architecture.hpp>
-#include <callbacks.hpp>
-#include <coreUtils.hpp>
-#include <cpuSize.hpp>
-#include <exceptions.hpp>
-#include <externalLibs.hpp>
-#include <immediate.hpp>
-#include <x8664Cpu.hpp>
-#include <x86Specifications.hpp>
-
-#ifdef TRITON_PYTHON_BINDINGS
-  #include <pythonBindings.hpp>
-#endif
-
+#include <triton/architecture.hpp>
+#include <triton/coreUtils.hpp>
+#include <triton/cpuSize.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/externalLibs.hpp>
+#include <triton/immediate.hpp>
+#include <triton/x8664Cpu.hpp>
 
 
 namespace triton {
   namespace arch {
     namespace x86 {
 
-      x8664Cpu::x8664Cpu() {
+      x8664Cpu::x8664Cpu(triton::callbacks::Callbacks* callbacks) {
+        this->callbacks = callbacks;
         this->clear();
       }
 
@@ -44,356 +37,347 @@ namespace triton {
 
 
       void x8664Cpu::copy(const x8664Cpu& other) {
-        this->memory = other.memory;
-        memcpy(this->rax,     other.rax,    sizeof(this->rax));
-        memcpy(this->rbx,     other.rbx,    sizeof(this->rbx));
-        memcpy(this->rcx,     other.rcx,    sizeof(this->rcx));
-        memcpy(this->rdx,     other.rdx,    sizeof(this->rdx));
-        memcpy(this->rdi,     other.rdi,    sizeof(this->rdi));
-        memcpy(this->rsi,     other.rsi,    sizeof(this->rsi));
-        memcpy(this->rsp,     other.rsp,    sizeof(this->rsp));
-        memcpy(this->rbp,     other.rbp,    sizeof(this->rbp));
-        memcpy(this->rip,     other.rip,    sizeof(this->rip));
-        memcpy(this->eflags,  other.eflags, sizeof(this->eflags));
-        memcpy(this->r8,      other.r8,     sizeof(this->r8));
-        memcpy(this->r9,      other.r9,     sizeof(this->r9));
-        memcpy(this->r10,     other.r10,    sizeof(this->r10));
-        memcpy(this->r11,     other.r11,    sizeof(this->r11));
-        memcpy(this->r12,     other.r12,    sizeof(this->r12));
-        memcpy(this->r13,     other.r13,    sizeof(this->r13));
-        memcpy(this->r14,     other.r14,    sizeof(this->r14));
-        memcpy(this->r15,     other.r15,    sizeof(this->r15));
-        memcpy(this->mm0,     other.mm0,    sizeof(this->mm0));
-        memcpy(this->mm1,     other.mm1,    sizeof(this->mm1));
-        memcpy(this->mm2,     other.mm2,    sizeof(this->mm2));
-        memcpy(this->mm3,     other.mm3,    sizeof(this->mm3));
-        memcpy(this->mm4,     other.mm4,    sizeof(this->mm4));
-        memcpy(this->mm5,     other.mm5,    sizeof(this->mm5));
-        memcpy(this->mm6,     other.mm6,    sizeof(this->mm6));
-        memcpy(this->mm7,     other.mm7,    sizeof(this->mm7));
-        memcpy(this->xmm0,    other.xmm0,   sizeof(this->xmm0));
-        memcpy(this->xmm1,    other.xmm1,   sizeof(this->xmm1));
-        memcpy(this->xmm2,    other.xmm2,   sizeof(this->xmm2));
-        memcpy(this->xmm3,    other.xmm3,   sizeof(this->xmm3));
-        memcpy(this->xmm4,    other.xmm4,   sizeof(this->xmm4));
-        memcpy(this->xmm5,    other.xmm5,   sizeof(this->xmm5));
-        memcpy(this->xmm6,    other.xmm6,   sizeof(this->xmm6));
-        memcpy(this->xmm7,    other.xmm7,   sizeof(this->xmm7));
-        memcpy(this->xmm8,    other.xmm8,   sizeof(this->xmm8));
-        memcpy(this->xmm9,    other.xmm9,   sizeof(this->xmm9));
-        memcpy(this->xmm10,   other.xmm10,  sizeof(this->xmm10));
-        memcpy(this->xmm11,   other.xmm11,  sizeof(this->xmm11));
-        memcpy(this->xmm12,   other.xmm12,  sizeof(this->xmm12));
-        memcpy(this->xmm13,   other.xmm13,  sizeof(this->xmm13));
-        memcpy(this->xmm14,   other.xmm14,  sizeof(this->xmm14));
-        memcpy(this->xmm15,   other.xmm15,  sizeof(this->xmm15));
-        memcpy(this->ymm0,    other.ymm0,   sizeof(this->ymm0));
-        memcpy(this->ymm1,    other.ymm1,   sizeof(this->ymm1));
-        memcpy(this->ymm2,    other.ymm2,   sizeof(this->ymm2));
-        memcpy(this->ymm3,    other.ymm3,   sizeof(this->ymm3));
-        memcpy(this->ymm4,    other.ymm4,   sizeof(this->ymm4));
-        memcpy(this->ymm5,    other.ymm5,   sizeof(this->ymm5));
-        memcpy(this->ymm6,    other.ymm6,   sizeof(this->ymm6));
-        memcpy(this->ymm7,    other.ymm7,   sizeof(this->ymm7));
-        memcpy(this->ymm8,    other.ymm8,   sizeof(this->ymm8));
-        memcpy(this->ymm9,    other.ymm9,   sizeof(this->ymm9));
-        memcpy(this->ymm10,   other.ymm10,  sizeof(this->ymm10));
-        memcpy(this->ymm11,   other.ymm11,  sizeof(this->ymm11));
-        memcpy(this->ymm12,   other.ymm12,  sizeof(this->ymm12));
-        memcpy(this->ymm13,   other.ymm13,  sizeof(this->ymm13));
-        memcpy(this->ymm14,   other.ymm14,  sizeof(this->ymm14));
-        memcpy(this->ymm15,   other.ymm15,  sizeof(this->ymm15));
-        memcpy(this->zmm0,    other.zmm0,   sizeof(this->zmm0));
-        memcpy(this->zmm1,    other.zmm1,   sizeof(this->zmm1));
-        memcpy(this->zmm2,    other.zmm2,   sizeof(this->zmm2));
-        memcpy(this->zmm3,    other.zmm3,   sizeof(this->zmm3));
-        memcpy(this->zmm4,    other.zmm4,   sizeof(this->zmm4));
-        memcpy(this->zmm5,    other.zmm5,   sizeof(this->zmm5));
-        memcpy(this->zmm6,    other.zmm6,   sizeof(this->zmm6));
-        memcpy(this->zmm7,    other.zmm7,   sizeof(this->zmm7));
-        memcpy(this->zmm8,    other.zmm8,   sizeof(this->zmm8));
-        memcpy(this->zmm9,    other.zmm9,   sizeof(this->zmm9));
-        memcpy(this->zmm10,   other.zmm10,  sizeof(this->zmm10));
-        memcpy(this->zmm11,   other.zmm11,  sizeof(this->zmm11));
-        memcpy(this->zmm12,   other.zmm12,  sizeof(this->zmm12));
-        memcpy(this->zmm13,   other.zmm13,  sizeof(this->zmm13));
-        memcpy(this->zmm14,   other.zmm14,  sizeof(this->zmm14));
-        memcpy(this->zmm15,   other.zmm15,  sizeof(this->zmm15));
-        memcpy(this->zmm16,   other.zmm16,  sizeof(this->zmm16));
-        memcpy(this->zmm17,   other.zmm17,  sizeof(this->zmm17));
-        memcpy(this->zmm18,   other.zmm18,  sizeof(this->zmm18));
-        memcpy(this->zmm19,   other.zmm19,  sizeof(this->zmm19));
-        memcpy(this->zmm20,   other.zmm20,  sizeof(this->zmm20));
-        memcpy(this->zmm21,   other.zmm21,  sizeof(this->zmm21));
-        memcpy(this->zmm22,   other.zmm22,  sizeof(this->zmm22));
-        memcpy(this->zmm23,   other.zmm23,  sizeof(this->zmm23));
-        memcpy(this->zmm24,   other.zmm24,  sizeof(this->zmm24));
-        memcpy(this->zmm25,   other.zmm25,  sizeof(this->zmm25));
-        memcpy(this->zmm26,   other.zmm26,  sizeof(this->zmm26));
-        memcpy(this->zmm27,   other.zmm27,  sizeof(this->zmm27));
-        memcpy(this->zmm28,   other.zmm28,  sizeof(this->zmm28));
-        memcpy(this->zmm29,   other.zmm29,  sizeof(this->zmm29));
-        memcpy(this->zmm30,   other.zmm30,  sizeof(this->zmm30));
-        memcpy(this->zmm31,   other.zmm31,  sizeof(this->zmm31));
-        memcpy(this->mxcsr,   other.mxcsr,  sizeof(this->mxcsr));
-        memcpy(this->cr0,     other.cr0,    sizeof(this->cr0));
-        memcpy(this->cr1,     other.cr1,    sizeof(this->cr1));
-        memcpy(this->cr2,     other.cr2,    sizeof(this->cr2));
-        memcpy(this->cr3,     other.cr3,    sizeof(this->cr3));
-        memcpy(this->cr4,     other.cr4,    sizeof(this->cr4));
-        memcpy(this->cr5,     other.cr5,    sizeof(this->cr5));
-        memcpy(this->cr6,     other.cr6,    sizeof(this->cr6));
-        memcpy(this->cr7,     other.cr7,    sizeof(this->cr7));
-        memcpy(this->cr8,     other.cr8,    sizeof(this->cr8));
-        memcpy(this->cr9,     other.cr9,    sizeof(this->cr9));
-        memcpy(this->cr10,    other.cr10,   sizeof(this->cr10));
-        memcpy(this->cr11,    other.cr11,   sizeof(this->cr11));
-        memcpy(this->cr12,    other.cr12,   sizeof(this->cr12));
-        memcpy(this->cr13,    other.cr13,   sizeof(this->cr13));
-        memcpy(this->cr14,    other.cr14,   sizeof(this->cr14));
-        memcpy(this->cr15,    other.cr15,   sizeof(this->cr15));
-        memcpy(this->cs,      other.cs,     sizeof(this->cs));
-        memcpy(this->ds,      other.ds,     sizeof(this->ds));
-        memcpy(this->es,      other.es,     sizeof(this->es));
-        memcpy(this->fs,      other.fs,     sizeof(this->fs));
-        memcpy(this->gs,      other.gs,     sizeof(this->gs));
-        memcpy(this->ss,      other.ss,     sizeof(this->ss));
+        this->callbacks = other.callbacks;
+        this->memory    = other.memory;
+
+        std::memcpy(this->rax,     other.rax,    sizeof(this->rax));
+        std::memcpy(this->rbx,     other.rbx,    sizeof(this->rbx));
+        std::memcpy(this->rcx,     other.rcx,    sizeof(this->rcx));
+        std::memcpy(this->rdx,     other.rdx,    sizeof(this->rdx));
+        std::memcpy(this->rdi,     other.rdi,    sizeof(this->rdi));
+        std::memcpy(this->rsi,     other.rsi,    sizeof(this->rsi));
+        std::memcpy(this->rsp,     other.rsp,    sizeof(this->rsp));
+        std::memcpy(this->rbp,     other.rbp,    sizeof(this->rbp));
+        std::memcpy(this->rip,     other.rip,    sizeof(this->rip));
+        std::memcpy(this->eflags,  other.eflags, sizeof(this->eflags));
+        std::memcpy(this->r8,      other.r8,     sizeof(this->r8));
+        std::memcpy(this->r9,      other.r9,     sizeof(this->r9));
+        std::memcpy(this->r10,     other.r10,    sizeof(this->r10));
+        std::memcpy(this->r11,     other.r11,    sizeof(this->r11));
+        std::memcpy(this->r12,     other.r12,    sizeof(this->r12));
+        std::memcpy(this->r13,     other.r13,    sizeof(this->r13));
+        std::memcpy(this->r14,     other.r14,    sizeof(this->r14));
+        std::memcpy(this->r15,     other.r15,    sizeof(this->r15));
+        std::memcpy(this->mm0,     other.mm0,    sizeof(this->mm0));
+        std::memcpy(this->mm1,     other.mm1,    sizeof(this->mm1));
+        std::memcpy(this->mm2,     other.mm2,    sizeof(this->mm2));
+        std::memcpy(this->mm3,     other.mm3,    sizeof(this->mm3));
+        std::memcpy(this->mm4,     other.mm4,    sizeof(this->mm4));
+        std::memcpy(this->mm5,     other.mm5,    sizeof(this->mm5));
+        std::memcpy(this->mm6,     other.mm6,    sizeof(this->mm6));
+        std::memcpy(this->mm7,     other.mm7,    sizeof(this->mm7));
+        std::memcpy(this->xmm0,    other.xmm0,   sizeof(this->xmm0));
+        std::memcpy(this->xmm1,    other.xmm1,   sizeof(this->xmm1));
+        std::memcpy(this->xmm2,    other.xmm2,   sizeof(this->xmm2));
+        std::memcpy(this->xmm3,    other.xmm3,   sizeof(this->xmm3));
+        std::memcpy(this->xmm4,    other.xmm4,   sizeof(this->xmm4));
+        std::memcpy(this->xmm5,    other.xmm5,   sizeof(this->xmm5));
+        std::memcpy(this->xmm6,    other.xmm6,   sizeof(this->xmm6));
+        std::memcpy(this->xmm7,    other.xmm7,   sizeof(this->xmm7));
+        std::memcpy(this->xmm8,    other.xmm8,   sizeof(this->xmm8));
+        std::memcpy(this->xmm9,    other.xmm9,   sizeof(this->xmm9));
+        std::memcpy(this->xmm10,   other.xmm10,  sizeof(this->xmm10));
+        std::memcpy(this->xmm11,   other.xmm11,  sizeof(this->xmm11));
+        std::memcpy(this->xmm12,   other.xmm12,  sizeof(this->xmm12));
+        std::memcpy(this->xmm13,   other.xmm13,  sizeof(this->xmm13));
+        std::memcpy(this->xmm14,   other.xmm14,  sizeof(this->xmm14));
+        std::memcpy(this->xmm15,   other.xmm15,  sizeof(this->xmm15));
+        std::memcpy(this->ymm0,    other.ymm0,   sizeof(this->ymm0));
+        std::memcpy(this->ymm1,    other.ymm1,   sizeof(this->ymm1));
+        std::memcpy(this->ymm2,    other.ymm2,   sizeof(this->ymm2));
+        std::memcpy(this->ymm3,    other.ymm3,   sizeof(this->ymm3));
+        std::memcpy(this->ymm4,    other.ymm4,   sizeof(this->ymm4));
+        std::memcpy(this->ymm5,    other.ymm5,   sizeof(this->ymm5));
+        std::memcpy(this->ymm6,    other.ymm6,   sizeof(this->ymm6));
+        std::memcpy(this->ymm7,    other.ymm7,   sizeof(this->ymm7));
+        std::memcpy(this->ymm8,    other.ymm8,   sizeof(this->ymm8));
+        std::memcpy(this->ymm9,    other.ymm9,   sizeof(this->ymm9));
+        std::memcpy(this->ymm10,   other.ymm10,  sizeof(this->ymm10));
+        std::memcpy(this->ymm11,   other.ymm11,  sizeof(this->ymm11));
+        std::memcpy(this->ymm12,   other.ymm12,  sizeof(this->ymm12));
+        std::memcpy(this->ymm13,   other.ymm13,  sizeof(this->ymm13));
+        std::memcpy(this->ymm14,   other.ymm14,  sizeof(this->ymm14));
+        std::memcpy(this->ymm15,   other.ymm15,  sizeof(this->ymm15));
+        std::memcpy(this->zmm0,    other.zmm0,   sizeof(this->zmm0));
+        std::memcpy(this->zmm1,    other.zmm1,   sizeof(this->zmm1));
+        std::memcpy(this->zmm2,    other.zmm2,   sizeof(this->zmm2));
+        std::memcpy(this->zmm3,    other.zmm3,   sizeof(this->zmm3));
+        std::memcpy(this->zmm4,    other.zmm4,   sizeof(this->zmm4));
+        std::memcpy(this->zmm5,    other.zmm5,   sizeof(this->zmm5));
+        std::memcpy(this->zmm6,    other.zmm6,   sizeof(this->zmm6));
+        std::memcpy(this->zmm7,    other.zmm7,   sizeof(this->zmm7));
+        std::memcpy(this->zmm8,    other.zmm8,   sizeof(this->zmm8));
+        std::memcpy(this->zmm9,    other.zmm9,   sizeof(this->zmm9));
+        std::memcpy(this->zmm10,   other.zmm10,  sizeof(this->zmm10));
+        std::memcpy(this->zmm11,   other.zmm11,  sizeof(this->zmm11));
+        std::memcpy(this->zmm12,   other.zmm12,  sizeof(this->zmm12));
+        std::memcpy(this->zmm13,   other.zmm13,  sizeof(this->zmm13));
+        std::memcpy(this->zmm14,   other.zmm14,  sizeof(this->zmm14));
+        std::memcpy(this->zmm15,   other.zmm15,  sizeof(this->zmm15));
+        std::memcpy(this->zmm16,   other.zmm16,  sizeof(this->zmm16));
+        std::memcpy(this->zmm17,   other.zmm17,  sizeof(this->zmm17));
+        std::memcpy(this->zmm18,   other.zmm18,  sizeof(this->zmm18));
+        std::memcpy(this->zmm19,   other.zmm19,  sizeof(this->zmm19));
+        std::memcpy(this->zmm20,   other.zmm20,  sizeof(this->zmm20));
+        std::memcpy(this->zmm21,   other.zmm21,  sizeof(this->zmm21));
+        std::memcpy(this->zmm22,   other.zmm22,  sizeof(this->zmm22));
+        std::memcpy(this->zmm23,   other.zmm23,  sizeof(this->zmm23));
+        std::memcpy(this->zmm24,   other.zmm24,  sizeof(this->zmm24));
+        std::memcpy(this->zmm25,   other.zmm25,  sizeof(this->zmm25));
+        std::memcpy(this->zmm26,   other.zmm26,  sizeof(this->zmm26));
+        std::memcpy(this->zmm27,   other.zmm27,  sizeof(this->zmm27));
+        std::memcpy(this->zmm28,   other.zmm28,  sizeof(this->zmm28));
+        std::memcpy(this->zmm29,   other.zmm29,  sizeof(this->zmm29));
+        std::memcpy(this->zmm30,   other.zmm30,  sizeof(this->zmm30));
+        std::memcpy(this->zmm31,   other.zmm31,  sizeof(this->zmm31));
+        std::memcpy(this->mxcsr,   other.mxcsr,  sizeof(this->mxcsr));
+        std::memcpy(this->cr0,     other.cr0,    sizeof(this->cr0));
+        std::memcpy(this->cr1,     other.cr1,    sizeof(this->cr1));
+        std::memcpy(this->cr2,     other.cr2,    sizeof(this->cr2));
+        std::memcpy(this->cr3,     other.cr3,    sizeof(this->cr3));
+        std::memcpy(this->cr4,     other.cr4,    sizeof(this->cr4));
+        std::memcpy(this->cr5,     other.cr5,    sizeof(this->cr5));
+        std::memcpy(this->cr6,     other.cr6,    sizeof(this->cr6));
+        std::memcpy(this->cr7,     other.cr7,    sizeof(this->cr7));
+        std::memcpy(this->cr8,     other.cr8,    sizeof(this->cr8));
+        std::memcpy(this->cr9,     other.cr9,    sizeof(this->cr9));
+        std::memcpy(this->cr10,    other.cr10,   sizeof(this->cr10));
+        std::memcpy(this->cr11,    other.cr11,   sizeof(this->cr11));
+        std::memcpy(this->cr12,    other.cr12,   sizeof(this->cr12));
+        std::memcpy(this->cr13,    other.cr13,   sizeof(this->cr13));
+        std::memcpy(this->cr14,    other.cr14,   sizeof(this->cr14));
+        std::memcpy(this->cr15,    other.cr15,   sizeof(this->cr15));
+        std::memcpy(this->cs,      other.cs,     sizeof(this->cs));
+        std::memcpy(this->ds,      other.ds,     sizeof(this->ds));
+        std::memcpy(this->es,      other.es,     sizeof(this->es));
+        std::memcpy(this->fs,      other.fs,     sizeof(this->fs));
+        std::memcpy(this->gs,      other.gs,     sizeof(this->gs));
+        std::memcpy(this->ss,      other.ss,     sizeof(this->ss));
       }
 
 
       void x8664Cpu::init(void) {
         /* Define registers ========================================================= */
-        triton::arch::x86::x86_reg_rax    = triton::arch::Register(triton::arch::x86::ID_REG_RAX);
-        triton::arch::x86::x86_reg_eax    = triton::arch::Register(triton::arch::x86::ID_REG_EAX);
-        triton::arch::x86::x86_reg_ax     = triton::arch::Register(triton::arch::x86::ID_REG_AX);
-        triton::arch::x86::x86_reg_ah     = triton::arch::Register(triton::arch::x86::ID_REG_AH);
-        triton::arch::x86::x86_reg_al     = triton::arch::Register(triton::arch::x86::ID_REG_AL);
+        triton::arch::x86::x86_reg_rax    = triton::arch::Register(triton::arch::x86::ID_REG_RAX, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_eax    = triton::arch::Register(triton::arch::x86::ID_REG_EAX, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ax     = triton::arch::Register(triton::arch::x86::ID_REG_AX,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ah     = triton::arch::Register(triton::arch::x86::ID_REG_AH,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_al     = triton::arch::Register(triton::arch::x86::ID_REG_AL,  0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_rbx    = triton::arch::Register(triton::arch::x86::ID_REG_RBX);
-        triton::arch::x86::x86_reg_ebx    = triton::arch::Register(triton::arch::x86::ID_REG_EBX);
-        triton::arch::x86::x86_reg_bx     = triton::arch::Register(triton::arch::x86::ID_REG_BX);
-        triton::arch::x86::x86_reg_bh     = triton::arch::Register(triton::arch::x86::ID_REG_BH);
-        triton::arch::x86::x86_reg_bl     = triton::arch::Register(triton::arch::x86::ID_REG_BL);
+        triton::arch::x86::x86_reg_rbx    = triton::arch::Register(triton::arch::x86::ID_REG_RBX, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ebx    = triton::arch::Register(triton::arch::x86::ID_REG_EBX, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_bx     = triton::arch::Register(triton::arch::x86::ID_REG_BX,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_bh     = triton::arch::Register(triton::arch::x86::ID_REG_BH,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_bl     = triton::arch::Register(triton::arch::x86::ID_REG_BL,  0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_rcx    = triton::arch::Register(triton::arch::x86::ID_REG_RCX);
-        triton::arch::x86::x86_reg_ecx    = triton::arch::Register(triton::arch::x86::ID_REG_ECX);
-        triton::arch::x86::x86_reg_cx     = triton::arch::Register(triton::arch::x86::ID_REG_CX);
-        triton::arch::x86::x86_reg_ch     = triton::arch::Register(triton::arch::x86::ID_REG_CH);
-        triton::arch::x86::x86_reg_cl     = triton::arch::Register(triton::arch::x86::ID_REG_CL);
+        triton::arch::x86::x86_reg_rcx    = triton::arch::Register(triton::arch::x86::ID_REG_RCX, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ecx    = triton::arch::Register(triton::arch::x86::ID_REG_ECX, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cx     = triton::arch::Register(triton::arch::x86::ID_REG_CX,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ch     = triton::arch::Register(triton::arch::x86::ID_REG_CH,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cl     = triton::arch::Register(triton::arch::x86::ID_REG_CL,  0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_rdx    = triton::arch::Register(triton::arch::x86::ID_REG_RDX);
-        triton::arch::x86::x86_reg_edx    = triton::arch::Register(triton::arch::x86::ID_REG_EDX);
-        triton::arch::x86::x86_reg_dx     = triton::arch::Register(triton::arch::x86::ID_REG_DX);
-        triton::arch::x86::x86_reg_dh     = triton::arch::Register(triton::arch::x86::ID_REG_DH);
-        triton::arch::x86::x86_reg_dl     = triton::arch::Register(triton::arch::x86::ID_REG_DL);
+        triton::arch::x86::x86_reg_rdx    = triton::arch::Register(triton::arch::x86::ID_REG_RDX, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_edx    = triton::arch::Register(triton::arch::x86::ID_REG_EDX, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_dx     = triton::arch::Register(triton::arch::x86::ID_REG_DX,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_dh     = triton::arch::Register(triton::arch::x86::ID_REG_DH,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_dl     = triton::arch::Register(triton::arch::x86::ID_REG_DL,  0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_rdi    = triton::arch::Register(triton::arch::x86::ID_REG_RDI);
-        triton::arch::x86::x86_reg_edi    = triton::arch::Register(triton::arch::x86::ID_REG_EDI);
-        triton::arch::x86::x86_reg_di     = triton::arch::Register(triton::arch::x86::ID_REG_DI);
-        triton::arch::x86::x86_reg_dil    = triton::arch::Register(triton::arch::x86::ID_REG_DIL);
+        triton::arch::x86::x86_reg_rdi    = triton::arch::Register(triton::arch::x86::ID_REG_RDI, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_edi    = triton::arch::Register(triton::arch::x86::ID_REG_EDI, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_di     = triton::arch::Register(triton::arch::x86::ID_REG_DI,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_dil    = triton::arch::Register(triton::arch::x86::ID_REG_DIL, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_rsi    = triton::arch::Register(triton::arch::x86::ID_REG_RSI);
-        triton::arch::x86::x86_reg_esi    = triton::arch::Register(triton::arch::x86::ID_REG_ESI);
-        triton::arch::x86::x86_reg_si     = triton::arch::Register(triton::arch::x86::ID_REG_SI);
-        triton::arch::x86::x86_reg_sil    = triton::arch::Register(triton::arch::x86::ID_REG_SIL);
+        triton::arch::x86::x86_reg_rsi    = triton::arch::Register(triton::arch::x86::ID_REG_RSI, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_esi    = triton::arch::Register(triton::arch::x86::ID_REG_ESI, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_si     = triton::arch::Register(triton::arch::x86::ID_REG_SI,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_sil    = triton::arch::Register(triton::arch::x86::ID_REG_SIL, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_rsp    = triton::arch::Register(triton::arch::x86::ID_REG_RSP);
-        triton::arch::x86::x86_reg_esp    = triton::arch::Register(triton::arch::x86::ID_REG_ESP);
-        triton::arch::x86::x86_reg_sp     = triton::arch::Register(triton::arch::x86::ID_REG_SP);
-        triton::arch::x86::x86_reg_spl    = triton::arch::Register(triton::arch::x86::ID_REG_SPL);
-        triton::arch::x86::x86_reg_stack  = triton::arch::Register(triton::arch::x86::ID_REG_RSP);
+        triton::arch::x86::x86_reg_rsp    = triton::arch::Register(triton::arch::x86::ID_REG_RSP, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_esp    = triton::arch::Register(triton::arch::x86::ID_REG_ESP, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_sp     = triton::arch::Register(triton::arch::x86::ID_REG_SP,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_spl    = triton::arch::Register(triton::arch::x86::ID_REG_SPL, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_stack  = triton::arch::Register(triton::arch::x86::ID_REG_RSP, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_rbp    = triton::arch::Register(triton::arch::x86::ID_REG_RBP);
-        triton::arch::x86::x86_reg_ebp    = triton::arch::Register(triton::arch::x86::ID_REG_EBP);
-        triton::arch::x86::x86_reg_bp     = triton::arch::Register(triton::arch::x86::ID_REG_BP);
-        triton::arch::x86::x86_reg_bpl    = triton::arch::Register(triton::arch::x86::ID_REG_BPL);
+        triton::arch::x86::x86_reg_rbp    = triton::arch::Register(triton::arch::x86::ID_REG_RBP, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ebp    = triton::arch::Register(triton::arch::x86::ID_REG_EBP, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_bp     = triton::arch::Register(triton::arch::x86::ID_REG_BP,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_bpl    = triton::arch::Register(triton::arch::x86::ID_REG_BPL, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_rip    = triton::arch::Register(triton::arch::x86::ID_REG_RIP);
-        triton::arch::x86::x86_reg_eip    = triton::arch::Register(triton::arch::x86::ID_REG_EIP);
-        triton::arch::x86::x86_reg_ip     = triton::arch::Register(triton::arch::x86::ID_REG_IP);
-        triton::arch::x86::x86_reg_pc     = triton::arch::Register(triton::arch::x86::ID_REG_RIP);
+        triton::arch::x86::x86_reg_rip    = triton::arch::Register(triton::arch::x86::ID_REG_RIP, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_eip    = triton::arch::Register(triton::arch::x86::ID_REG_EIP, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ip     = triton::arch::Register(triton::arch::x86::ID_REG_IP,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_pc     = triton::arch::Register(triton::arch::x86::ID_REG_RIP, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_eflags = triton::arch::Register(triton::arch::x86::ID_REG_EFLAGS);
+        triton::arch::x86::x86_reg_eflags = triton::arch::Register(triton::arch::x86::ID_REG_EFLAGS, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_r8     = triton::arch::Register(triton::arch::x86::ID_REG_R8);
-        triton::arch::x86::x86_reg_r8d    = triton::arch::Register(triton::arch::x86::ID_REG_R8D);
-        triton::arch::x86::x86_reg_r8w    = triton::arch::Register(triton::arch::x86::ID_REG_R8W);
-        triton::arch::x86::x86_reg_r8b    = triton::arch::Register(triton::arch::x86::ID_REG_R8B);
+        triton::arch::x86::x86_reg_r8     = triton::arch::Register(triton::arch::x86::ID_REG_R8,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r8d    = triton::arch::Register(triton::arch::x86::ID_REG_R8D, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r8w    = triton::arch::Register(triton::arch::x86::ID_REG_R8W, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r8b    = triton::arch::Register(triton::arch::x86::ID_REG_R8B, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_r9     = triton::arch::Register(triton::arch::x86::ID_REG_R9);
-        triton::arch::x86::x86_reg_r9d    = triton::arch::Register(triton::arch::x86::ID_REG_R9D);
-        triton::arch::x86::x86_reg_r9w    = triton::arch::Register(triton::arch::x86::ID_REG_R9W);
-        triton::arch::x86::x86_reg_r9b    = triton::arch::Register(triton::arch::x86::ID_REG_R9B);
+        triton::arch::x86::x86_reg_r9     = triton::arch::Register(triton::arch::x86::ID_REG_R9,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r9d    = triton::arch::Register(triton::arch::x86::ID_REG_R9D, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r9w    = triton::arch::Register(triton::arch::x86::ID_REG_R9W, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r9b    = triton::arch::Register(triton::arch::x86::ID_REG_R9B, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_r10    = triton::arch::Register(triton::arch::x86::ID_REG_R10);
-        triton::arch::x86::x86_reg_r10d   = triton::arch::Register(triton::arch::x86::ID_REG_R10D);
-        triton::arch::x86::x86_reg_r10w   = triton::arch::Register(triton::arch::x86::ID_REG_R10W);
-        triton::arch::x86::x86_reg_r10b   = triton::arch::Register(triton::arch::x86::ID_REG_R10B);
+        triton::arch::x86::x86_reg_r10    = triton::arch::Register(triton::arch::x86::ID_REG_R10,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r10d   = triton::arch::Register(triton::arch::x86::ID_REG_R10D, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r10w   = triton::arch::Register(triton::arch::x86::ID_REG_R10W, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r10b   = triton::arch::Register(triton::arch::x86::ID_REG_R10B, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_r11    = triton::arch::Register(triton::arch::x86::ID_REG_R11);
-        triton::arch::x86::x86_reg_r11d   = triton::arch::Register(triton::arch::x86::ID_REG_R11D);
-        triton::arch::x86::x86_reg_r11w   = triton::arch::Register(triton::arch::x86::ID_REG_R11W);
-        triton::arch::x86::x86_reg_r11b   = triton::arch::Register(triton::arch::x86::ID_REG_R11B);
+        triton::arch::x86::x86_reg_r11    = triton::arch::Register(triton::arch::x86::ID_REG_R11,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r11d   = triton::arch::Register(triton::arch::x86::ID_REG_R11D, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r11w   = triton::arch::Register(triton::arch::x86::ID_REG_R11W, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r11b   = triton::arch::Register(triton::arch::x86::ID_REG_R11B, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_r12    = triton::arch::Register(triton::arch::x86::ID_REG_R12);
-        triton::arch::x86::x86_reg_r12d   = triton::arch::Register(triton::arch::x86::ID_REG_R12D);
-        triton::arch::x86::x86_reg_r12w   = triton::arch::Register(triton::arch::x86::ID_REG_R12W);
-        triton::arch::x86::x86_reg_r12b   = triton::arch::Register(triton::arch::x86::ID_REG_R12B);
+        triton::arch::x86::x86_reg_r12    = triton::arch::Register(triton::arch::x86::ID_REG_R12,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r12d   = triton::arch::Register(triton::arch::x86::ID_REG_R12D, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r12w   = triton::arch::Register(triton::arch::x86::ID_REG_R12W, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r12b   = triton::arch::Register(triton::arch::x86::ID_REG_R12B, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_r13    = triton::arch::Register(triton::arch::x86::ID_REG_R13);
-        triton::arch::x86::x86_reg_r13d   = triton::arch::Register(triton::arch::x86::ID_REG_R13D);
-        triton::arch::x86::x86_reg_r13w   = triton::arch::Register(triton::arch::x86::ID_REG_R13W);
-        triton::arch::x86::x86_reg_r13b   = triton::arch::Register(triton::arch::x86::ID_REG_R13B);
+        triton::arch::x86::x86_reg_r13    = triton::arch::Register(triton::arch::x86::ID_REG_R13,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r13d   = triton::arch::Register(triton::arch::x86::ID_REG_R13D, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r13w   = triton::arch::Register(triton::arch::x86::ID_REG_R13W, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r13b   = triton::arch::Register(triton::arch::x86::ID_REG_R13B, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_r14    = triton::arch::Register(triton::arch::x86::ID_REG_R14);
-        triton::arch::x86::x86_reg_r14d   = triton::arch::Register(triton::arch::x86::ID_REG_R14D);
-        triton::arch::x86::x86_reg_r14w   = triton::arch::Register(triton::arch::x86::ID_REG_R14W);
-        triton::arch::x86::x86_reg_r14b   = triton::arch::Register(triton::arch::x86::ID_REG_R14B);
+        triton::arch::x86::x86_reg_r14    = triton::arch::Register(triton::arch::x86::ID_REG_R14,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r14d   = triton::arch::Register(triton::arch::x86::ID_REG_R14D, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r14w   = triton::arch::Register(triton::arch::x86::ID_REG_R14W, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r14b   = triton::arch::Register(triton::arch::x86::ID_REG_R14B, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_r15    = triton::arch::Register(triton::arch::x86::ID_REG_R15);
-        triton::arch::x86::x86_reg_r15d   = triton::arch::Register(triton::arch::x86::ID_REG_R15D);
-        triton::arch::x86::x86_reg_r15w   = triton::arch::Register(triton::arch::x86::ID_REG_R15W);
-        triton::arch::x86::x86_reg_r15b   = triton::arch::Register(triton::arch::x86::ID_REG_R15B);
+        triton::arch::x86::x86_reg_r15    = triton::arch::Register(triton::arch::x86::ID_REG_R15,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r15d   = triton::arch::Register(triton::arch::x86::ID_REG_R15D, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r15w   = triton::arch::Register(triton::arch::x86::ID_REG_R15W, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_r15b   = triton::arch::Register(triton::arch::x86::ID_REG_R15B, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_mm0    = triton::arch::Register(triton::arch::x86::ID_REG_MM0);
-        triton::arch::x86::x86_reg_mm1    = triton::arch::Register(triton::arch::x86::ID_REG_MM1);
-        triton::arch::x86::x86_reg_mm2    = triton::arch::Register(triton::arch::x86::ID_REG_MM2);
-        triton::arch::x86::x86_reg_mm3    = triton::arch::Register(triton::arch::x86::ID_REG_MM3);
-        triton::arch::x86::x86_reg_mm4    = triton::arch::Register(triton::arch::x86::ID_REG_MM4);
-        triton::arch::x86::x86_reg_mm5    = triton::arch::Register(triton::arch::x86::ID_REG_MM5);
-        triton::arch::x86::x86_reg_mm6    = triton::arch::Register(triton::arch::x86::ID_REG_MM6);
-        triton::arch::x86::x86_reg_mm7    = triton::arch::Register(triton::arch::x86::ID_REG_MM7);
+        triton::arch::x86::x86_reg_mm0    = triton::arch::Register(triton::arch::x86::ID_REG_MM0, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_mm1    = triton::arch::Register(triton::arch::x86::ID_REG_MM1, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_mm2    = triton::arch::Register(triton::arch::x86::ID_REG_MM2, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_mm3    = triton::arch::Register(triton::arch::x86::ID_REG_MM3, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_mm4    = triton::arch::Register(triton::arch::x86::ID_REG_MM4, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_mm5    = triton::arch::Register(triton::arch::x86::ID_REG_MM5, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_mm6    = triton::arch::Register(triton::arch::x86::ID_REG_MM6, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_mm7    = triton::arch::Register(triton::arch::x86::ID_REG_MM7, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_xmm0   = triton::arch::Register(triton::arch::x86::ID_REG_XMM0);
-        triton::arch::x86::x86_reg_xmm1   = triton::arch::Register(triton::arch::x86::ID_REG_XMM1);
-        triton::arch::x86::x86_reg_xmm2   = triton::arch::Register(triton::arch::x86::ID_REG_XMM2);
-        triton::arch::x86::x86_reg_xmm3   = triton::arch::Register(triton::arch::x86::ID_REG_XMM3);
-        triton::arch::x86::x86_reg_xmm4   = triton::arch::Register(triton::arch::x86::ID_REG_XMM4);
-        triton::arch::x86::x86_reg_xmm5   = triton::arch::Register(triton::arch::x86::ID_REG_XMM5);
-        triton::arch::x86::x86_reg_xmm6   = triton::arch::Register(triton::arch::x86::ID_REG_XMM6);
-        triton::arch::x86::x86_reg_xmm7   = triton::arch::Register(triton::arch::x86::ID_REG_XMM7);
-        triton::arch::x86::x86_reg_xmm8   = triton::arch::Register(triton::arch::x86::ID_REG_XMM8);
-        triton::arch::x86::x86_reg_xmm9   = triton::arch::Register(triton::arch::x86::ID_REG_XMM9);
-        triton::arch::x86::x86_reg_xmm10  = triton::arch::Register(triton::arch::x86::ID_REG_XMM10);
-        triton::arch::x86::x86_reg_xmm11  = triton::arch::Register(triton::arch::x86::ID_REG_XMM11);
-        triton::arch::x86::x86_reg_xmm12  = triton::arch::Register(triton::arch::x86::ID_REG_XMM12);
-        triton::arch::x86::x86_reg_xmm13  = triton::arch::Register(triton::arch::x86::ID_REG_XMM13);
-        triton::arch::x86::x86_reg_xmm14  = triton::arch::Register(triton::arch::x86::ID_REG_XMM14);
-        triton::arch::x86::x86_reg_xmm15  = triton::arch::Register(triton::arch::x86::ID_REG_XMM15);
+        triton::arch::x86::x86_reg_xmm0   = triton::arch::Register(triton::arch::x86::ID_REG_XMM0,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_xmm1   = triton::arch::Register(triton::arch::x86::ID_REG_XMM1,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_xmm2   = triton::arch::Register(triton::arch::x86::ID_REG_XMM2,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_xmm3   = triton::arch::Register(triton::arch::x86::ID_REG_XMM3,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_xmm4   = triton::arch::Register(triton::arch::x86::ID_REG_XMM4,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_xmm5   = triton::arch::Register(triton::arch::x86::ID_REG_XMM5,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_xmm6   = triton::arch::Register(triton::arch::x86::ID_REG_XMM6,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_xmm7   = triton::arch::Register(triton::arch::x86::ID_REG_XMM7,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_xmm8   = triton::arch::Register(triton::arch::x86::ID_REG_XMM8,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_xmm9   = triton::arch::Register(triton::arch::x86::ID_REG_XMM9,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_xmm10  = triton::arch::Register(triton::arch::x86::ID_REG_XMM10, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_xmm11  = triton::arch::Register(triton::arch::x86::ID_REG_XMM11, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_xmm12  = triton::arch::Register(triton::arch::x86::ID_REG_XMM12, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_xmm13  = triton::arch::Register(triton::arch::x86::ID_REG_XMM13, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_xmm14  = triton::arch::Register(triton::arch::x86::ID_REG_XMM14, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_xmm15  = triton::arch::Register(triton::arch::x86::ID_REG_XMM15, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_ymm0   = triton::arch::Register(triton::arch::x86::ID_REG_YMM0);
-        triton::arch::x86::x86_reg_ymm1   = triton::arch::Register(triton::arch::x86::ID_REG_YMM1);
-        triton::arch::x86::x86_reg_ymm2   = triton::arch::Register(triton::arch::x86::ID_REG_YMM2);
-        triton::arch::x86::x86_reg_ymm3   = triton::arch::Register(triton::arch::x86::ID_REG_YMM3);
-        triton::arch::x86::x86_reg_ymm4   = triton::arch::Register(triton::arch::x86::ID_REG_YMM4);
-        triton::arch::x86::x86_reg_ymm5   = triton::arch::Register(triton::arch::x86::ID_REG_YMM5);
-        triton::arch::x86::x86_reg_ymm6   = triton::arch::Register(triton::arch::x86::ID_REG_YMM6);
-        triton::arch::x86::x86_reg_ymm7   = triton::arch::Register(triton::arch::x86::ID_REG_YMM7);
-        triton::arch::x86::x86_reg_ymm8   = triton::arch::Register(triton::arch::x86::ID_REG_YMM8);
-        triton::arch::x86::x86_reg_ymm9   = triton::arch::Register(triton::arch::x86::ID_REG_YMM9);
-        triton::arch::x86::x86_reg_ymm10  = triton::arch::Register(triton::arch::x86::ID_REG_YMM10);
-        triton::arch::x86::x86_reg_ymm11  = triton::arch::Register(triton::arch::x86::ID_REG_YMM11);
-        triton::arch::x86::x86_reg_ymm12  = triton::arch::Register(triton::arch::x86::ID_REG_YMM12);
-        triton::arch::x86::x86_reg_ymm13  = triton::arch::Register(triton::arch::x86::ID_REG_YMM13);
-        triton::arch::x86::x86_reg_ymm14  = triton::arch::Register(triton::arch::x86::ID_REG_YMM14);
-        triton::arch::x86::x86_reg_ymm15  = triton::arch::Register(triton::arch::x86::ID_REG_YMM15);
+        triton::arch::x86::x86_reg_ymm0   = triton::arch::Register(triton::arch::x86::ID_REG_YMM0,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ymm1   = triton::arch::Register(triton::arch::x86::ID_REG_YMM1,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ymm2   = triton::arch::Register(triton::arch::x86::ID_REG_YMM2,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ymm3   = triton::arch::Register(triton::arch::x86::ID_REG_YMM3,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ymm4   = triton::arch::Register(triton::arch::x86::ID_REG_YMM4,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ymm5   = triton::arch::Register(triton::arch::x86::ID_REG_YMM5,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ymm6   = triton::arch::Register(triton::arch::x86::ID_REG_YMM6,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ymm7   = triton::arch::Register(triton::arch::x86::ID_REG_YMM7,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ymm8   = triton::arch::Register(triton::arch::x86::ID_REG_YMM8,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ymm9   = triton::arch::Register(triton::arch::x86::ID_REG_YMM9,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ymm10  = triton::arch::Register(triton::arch::x86::ID_REG_YMM10, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ymm11  = triton::arch::Register(triton::arch::x86::ID_REG_YMM11, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ymm12  = triton::arch::Register(triton::arch::x86::ID_REG_YMM12, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ymm13  = triton::arch::Register(triton::arch::x86::ID_REG_YMM13, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ymm14  = triton::arch::Register(triton::arch::x86::ID_REG_YMM14, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ymm15  = triton::arch::Register(triton::arch::x86::ID_REG_YMM15, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_zmm0   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM0);
-        triton::arch::x86::x86_reg_zmm1   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM1);
-        triton::arch::x86::x86_reg_zmm2   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM2);
-        triton::arch::x86::x86_reg_zmm3   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM3);
-        triton::arch::x86::x86_reg_zmm4   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM4);
-        triton::arch::x86::x86_reg_zmm5   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM5);
-        triton::arch::x86::x86_reg_zmm6   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM6);
-        triton::arch::x86::x86_reg_zmm7   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM7);
-        triton::arch::x86::x86_reg_zmm8   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM8);
-        triton::arch::x86::x86_reg_zmm9   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM9);
-        triton::arch::x86::x86_reg_zmm10  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM10);
-        triton::arch::x86::x86_reg_zmm11  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM11);
-        triton::arch::x86::x86_reg_zmm12  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM12);
-        triton::arch::x86::x86_reg_zmm13  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM13);
-        triton::arch::x86::x86_reg_zmm14  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM14);
-        triton::arch::x86::x86_reg_zmm15  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM15);
-        triton::arch::x86::x86_reg_zmm16  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM16);
-        triton::arch::x86::x86_reg_zmm17  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM17);
-        triton::arch::x86::x86_reg_zmm18  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM18);
-        triton::arch::x86::x86_reg_zmm19  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM19);
-        triton::arch::x86::x86_reg_zmm20  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM20);
-        triton::arch::x86::x86_reg_zmm21  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM21);
-        triton::arch::x86::x86_reg_zmm22  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM22);
-        triton::arch::x86::x86_reg_zmm23  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM23);
-        triton::arch::x86::x86_reg_zmm24  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM24);
-        triton::arch::x86::x86_reg_zmm25  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM25);
-        triton::arch::x86::x86_reg_zmm26  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM26);
-        triton::arch::x86::x86_reg_zmm27  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM27);
-        triton::arch::x86::x86_reg_zmm28  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM28);
-        triton::arch::x86::x86_reg_zmm29  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM29);
-        triton::arch::x86::x86_reg_zmm30  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM30);
-        triton::arch::x86::x86_reg_zmm31  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM31);
+        triton::arch::x86::x86_reg_zmm0   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM0,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm1   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM1,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm2   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM2,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm3   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM3,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm4   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM4,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm5   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM5,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm6   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM6,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm7   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM7,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm8   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM8,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm9   = triton::arch::Register(triton::arch::x86::ID_REG_ZMM9,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm10  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM10, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm11  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM11, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm12  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM12, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm13  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM13, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm14  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM14, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm15  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM15, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm16  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM16, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm17  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM17, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm18  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM18, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm19  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM19, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm20  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM20, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm21  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM21, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm22  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM22, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm23  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM23, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm24  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM24, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm25  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM25, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm26  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM26, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm27  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM27, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm28  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM28, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm29  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM29, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm30  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM30, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zmm31  = triton::arch::Register(triton::arch::x86::ID_REG_ZMM31, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_mxcsr  = triton::arch::Register(triton::arch::x86::ID_REG_MXCSR);
+        triton::arch::x86::x86_reg_mxcsr  = triton::arch::Register(triton::arch::x86::ID_REG_MXCSR, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_cr0    = triton::arch::Register(triton::arch::x86::ID_REG_CR0);
-        triton::arch::x86::x86_reg_cr1    = triton::arch::Register(triton::arch::x86::ID_REG_CR1);
-        triton::arch::x86::x86_reg_cr2    = triton::arch::Register(triton::arch::x86::ID_REG_CR2);
-        triton::arch::x86::x86_reg_cr3    = triton::arch::Register(triton::arch::x86::ID_REG_CR3);
-        triton::arch::x86::x86_reg_cr4    = triton::arch::Register(triton::arch::x86::ID_REG_CR4);
-        triton::arch::x86::x86_reg_cr5    = triton::arch::Register(triton::arch::x86::ID_REG_CR5);
-        triton::arch::x86::x86_reg_cr6    = triton::arch::Register(triton::arch::x86::ID_REG_CR6);
-        triton::arch::x86::x86_reg_cr7    = triton::arch::Register(triton::arch::x86::ID_REG_CR7);
-        triton::arch::x86::x86_reg_cr8    = triton::arch::Register(triton::arch::x86::ID_REG_CR8);
-        triton::arch::x86::x86_reg_cr9    = triton::arch::Register(triton::arch::x86::ID_REG_CR9);
-        triton::arch::x86::x86_reg_cr10   = triton::arch::Register(triton::arch::x86::ID_REG_CR10);
-        triton::arch::x86::x86_reg_cr11   = triton::arch::Register(triton::arch::x86::ID_REG_CR11);
-        triton::arch::x86::x86_reg_cr12   = triton::arch::Register(triton::arch::x86::ID_REG_CR12);
-        triton::arch::x86::x86_reg_cr13   = triton::arch::Register(triton::arch::x86::ID_REG_CR13);
-        triton::arch::x86::x86_reg_cr14   = triton::arch::Register(triton::arch::x86::ID_REG_CR14);
-        triton::arch::x86::x86_reg_cr15   = triton::arch::Register(triton::arch::x86::ID_REG_CR15);
+        triton::arch::x86::x86_reg_cr0    = triton::arch::Register(triton::arch::x86::ID_REG_CR0,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cr1    = triton::arch::Register(triton::arch::x86::ID_REG_CR1,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cr2    = triton::arch::Register(triton::arch::x86::ID_REG_CR2,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cr3    = triton::arch::Register(triton::arch::x86::ID_REG_CR3,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cr4    = triton::arch::Register(triton::arch::x86::ID_REG_CR4,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cr5    = triton::arch::Register(triton::arch::x86::ID_REG_CR5,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cr6    = triton::arch::Register(triton::arch::x86::ID_REG_CR6,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cr7    = triton::arch::Register(triton::arch::x86::ID_REG_CR7,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cr8    = triton::arch::Register(triton::arch::x86::ID_REG_CR8,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cr9    = triton::arch::Register(triton::arch::x86::ID_REG_CR9,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cr10   = triton::arch::Register(triton::arch::x86::ID_REG_CR10, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cr11   = triton::arch::Register(triton::arch::x86::ID_REG_CR11, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cr12   = triton::arch::Register(triton::arch::x86::ID_REG_CR12, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cr13   = triton::arch::Register(triton::arch::x86::ID_REG_CR13, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cr14   = triton::arch::Register(triton::arch::x86::ID_REG_CR14, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cr15   = triton::arch::Register(triton::arch::x86::ID_REG_CR15, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_ie     = triton::arch::Register(triton::arch::x86::ID_REG_IE);
-        triton::arch::x86::x86_reg_de     = triton::arch::Register(triton::arch::x86::ID_REG_DE);
-        triton::arch::x86::x86_reg_ze     = triton::arch::Register(triton::arch::x86::ID_REG_ZE);
-        triton::arch::x86::x86_reg_oe     = triton::arch::Register(triton::arch::x86::ID_REG_OE);
-        triton::arch::x86::x86_reg_ue     = triton::arch::Register(triton::arch::x86::ID_REG_UE);
-        triton::arch::x86::x86_reg_pe     = triton::arch::Register(triton::arch::x86::ID_REG_PE);
-        triton::arch::x86::x86_reg_daz    = triton::arch::Register(triton::arch::x86::ID_REG_DAZ);
-        triton::arch::x86::x86_reg_im     = triton::arch::Register(triton::arch::x86::ID_REG_IM);
-        triton::arch::x86::x86_reg_dm     = triton::arch::Register(triton::arch::x86::ID_REG_DM);
-        triton::arch::x86::x86_reg_zm     = triton::arch::Register(triton::arch::x86::ID_REG_ZM);
-        triton::arch::x86::x86_reg_om     = triton::arch::Register(triton::arch::x86::ID_REG_OM);
-        triton::arch::x86::x86_reg_um     = triton::arch::Register(triton::arch::x86::ID_REG_UM);
-        triton::arch::x86::x86_reg_pm     = triton::arch::Register(triton::arch::x86::ID_REG_PM);
-        triton::arch::x86::x86_reg_rl     = triton::arch::Register(triton::arch::x86::ID_REG_RL);
-        triton::arch::x86::x86_reg_rh     = triton::arch::Register(triton::arch::x86::ID_REG_RH);
-        triton::arch::x86::x86_reg_fz     = triton::arch::Register(triton::arch::x86::ID_REG_FZ);
+        triton::arch::x86::x86_reg_ie     = triton::arch::Register(triton::arch::x86::ID_REG_IE,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_de     = triton::arch::Register(triton::arch::x86::ID_REG_DE,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ze     = triton::arch::Register(triton::arch::x86::ID_REG_ZE,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_oe     = triton::arch::Register(triton::arch::x86::ID_REG_OE,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ue     = triton::arch::Register(triton::arch::x86::ID_REG_UE,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_pe     = triton::arch::Register(triton::arch::x86::ID_REG_PE,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_daz    = triton::arch::Register(triton::arch::x86::ID_REG_DAZ, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_im     = triton::arch::Register(triton::arch::x86::ID_REG_IM,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_dm     = triton::arch::Register(triton::arch::x86::ID_REG_DM,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zm     = triton::arch::Register(triton::arch::x86::ID_REG_ZM,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_om     = triton::arch::Register(triton::arch::x86::ID_REG_OM,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_um     = triton::arch::Register(triton::arch::x86::ID_REG_UM,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_pm     = triton::arch::Register(triton::arch::x86::ID_REG_PM,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_rl     = triton::arch::Register(triton::arch::x86::ID_REG_RL,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_rh     = triton::arch::Register(triton::arch::x86::ID_REG_RH,  0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_fz     = triton::arch::Register(triton::arch::x86::ID_REG_FZ,  0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_af     = triton::arch::Register(triton::arch::x86::ID_REG_AF);
-        triton::arch::x86::x86_reg_cf     = triton::arch::Register(triton::arch::x86::ID_REG_CF);
-        triton::arch::x86::x86_reg_df     = triton::arch::Register(triton::arch::x86::ID_REG_DF);
-        triton::arch::x86::x86_reg_if     = triton::arch::Register(triton::arch::x86::ID_REG_IF);
-        triton::arch::x86::x86_reg_of     = triton::arch::Register(triton::arch::x86::ID_REG_OF);
-        triton::arch::x86::x86_reg_pf     = triton::arch::Register(triton::arch::x86::ID_REG_PF);
-        triton::arch::x86::x86_reg_sf     = triton::arch::Register(triton::arch::x86::ID_REG_SF);
-        triton::arch::x86::x86_reg_tf     = triton::arch::Register(triton::arch::x86::ID_REG_TF);
-        triton::arch::x86::x86_reg_zf     = triton::arch::Register(triton::arch::x86::ID_REG_ZF);
+        triton::arch::x86::x86_reg_af     = triton::arch::Register(triton::arch::x86::ID_REG_AF, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_cf     = triton::arch::Register(triton::arch::x86::ID_REG_CF, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_df     = triton::arch::Register(triton::arch::x86::ID_REG_DF, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_if     = triton::arch::Register(triton::arch::x86::ID_REG_IF, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_of     = triton::arch::Register(triton::arch::x86::ID_REG_OF, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_pf     = triton::arch::Register(triton::arch::x86::ID_REG_PF, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_sf     = triton::arch::Register(triton::arch::x86::ID_REG_SF, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_tf     = triton::arch::Register(triton::arch::x86::ID_REG_TF, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_zf     = triton::arch::Register(triton::arch::x86::ID_REG_ZF, 0x00, triton::arch::IMMUTABLE_REGISTER);
 
-        triton::arch::x86::x86_reg_cs     = triton::arch::Register(triton::arch::x86::ID_REG_CS);
-        triton::arch::x86::x86_reg_ds     = triton::arch::Register(triton::arch::x86::ID_REG_DS);
-        triton::arch::x86::x86_reg_es     = triton::arch::Register(triton::arch::x86::ID_REG_ES);
-        triton::arch::x86::x86_reg_fs     = triton::arch::Register(triton::arch::x86::ID_REG_FS);
-        triton::arch::x86::x86_reg_gs     = triton::arch::Register(triton::arch::x86::ID_REG_GS);
-        triton::arch::x86::x86_reg_ss     = triton::arch::Register(triton::arch::x86::ID_REG_SS);
-
-        /* Update python env ======================================================== */
-        #ifdef TRITON_PYTHON_BINDINGS
-          triton::bindings::python::initRegNamespace();
-          triton::bindings::python::initCpuSizeNamespace();
-          triton::bindings::python::initX86OpcodesNamespace();
-          triton::bindings::python::initX86PrefixesNamespace();
-          #if defined(__unix__) || defined(__APPLE__)
-            triton::bindings::python::initSyscallNamespace();
-          #endif
-        #endif
+        triton::arch::x86::x86_reg_cs     = triton::arch::Register(triton::arch::x86::ID_REG_CS, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ds     = triton::arch::Register(triton::arch::x86::ID_REG_DS, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_es     = triton::arch::Register(triton::arch::x86::ID_REG_ES, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_fs     = triton::arch::Register(triton::arch::x86::ID_REG_FS, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_gs     = triton::arch::Register(triton::arch::x86::ID_REG_GS, 0x00, triton::arch::IMMUTABLE_REGISTER);
+        triton::arch::x86::x86_reg_ss     = triton::arch::Register(triton::arch::x86::ID_REG_SS, 0x00, triton::arch::IMMUTABLE_REGISTER);
       }
 
 
@@ -402,119 +386,119 @@ namespace triton {
         this->memory.clear();
 
         /* Clear registers */
-        memset(this->rax,     0x00, sizeof(this->rax));
-        memset(this->rbx,     0x00, sizeof(this->rbx));
-        memset(this->rcx,     0x00, sizeof(this->rcx));
-        memset(this->rdx,     0x00, sizeof(this->rdx));
-        memset(this->rdi,     0x00, sizeof(this->rdi));
-        memset(this->rsi,     0x00, sizeof(this->rsi));
-        memset(this->rsp,     0x00, sizeof(this->rsp));
-        memset(this->rbp,     0x00, sizeof(this->rbp));
-        memset(this->rip,     0x00, sizeof(this->rip));
-        memset(this->eflags,  0x00, sizeof(this->eflags));
-        memset(this->r8,      0x00, sizeof(this->r8));
-        memset(this->r9,      0x00, sizeof(this->r9));
-        memset(this->r10,     0x00, sizeof(this->r10));
-        memset(this->r11,     0x00, sizeof(this->r11));
-        memset(this->r12,     0x00, sizeof(this->r12));
-        memset(this->r13,     0x00, sizeof(this->r13));
-        memset(this->r14,     0x00, sizeof(this->r14));
-        memset(this->r15,     0x00, sizeof(this->r15));
-        memset(this->mm0,     0x00, sizeof(this->mm0));
-        memset(this->mm1,     0x00, sizeof(this->mm1));
-        memset(this->mm2,     0x00, sizeof(this->mm2));
-        memset(this->mm3,     0x00, sizeof(this->mm3));
-        memset(this->mm4,     0x00, sizeof(this->mm4));
-        memset(this->mm5,     0x00, sizeof(this->mm5));
-        memset(this->mm6,     0x00, sizeof(this->mm6));
-        memset(this->mm7,     0x00, sizeof(this->mm7));
-        memset(this->xmm0,    0x00, sizeof(this->xmm0));
-        memset(this->xmm1,    0x00, sizeof(this->xmm1));
-        memset(this->xmm2,    0x00, sizeof(this->xmm2));
-        memset(this->xmm3,    0x00, sizeof(this->xmm3));
-        memset(this->xmm4,    0x00, sizeof(this->xmm4));
-        memset(this->xmm5,    0x00, sizeof(this->xmm5));
-        memset(this->xmm6,    0x00, sizeof(this->xmm6));
-        memset(this->xmm7,    0x00, sizeof(this->xmm7));
-        memset(this->xmm8,    0x00, sizeof(this->xmm8));
-        memset(this->xmm9,    0x00, sizeof(this->xmm9));
-        memset(this->xmm10,   0x00, sizeof(this->xmm10));
-        memset(this->xmm11,   0x00, sizeof(this->xmm11));
-        memset(this->xmm12,   0x00, sizeof(this->xmm12));
-        memset(this->xmm13,   0x00, sizeof(this->xmm13));
-        memset(this->xmm14,   0x00, sizeof(this->xmm14));
-        memset(this->xmm15,   0x00, sizeof(this->xmm15));
-        memset(this->ymm0,    0x00, sizeof(this->ymm0));
-        memset(this->ymm1,    0x00, sizeof(this->ymm1));
-        memset(this->ymm2,    0x00, sizeof(this->ymm2));
-        memset(this->ymm3,    0x00, sizeof(this->ymm3));
-        memset(this->ymm4,    0x00, sizeof(this->ymm4));
-        memset(this->ymm5,    0x00, sizeof(this->ymm5));
-        memset(this->ymm6,    0x00, sizeof(this->ymm6));
-        memset(this->ymm7,    0x00, sizeof(this->ymm7));
-        memset(this->ymm8,    0x00, sizeof(this->ymm8));
-        memset(this->ymm9,    0x00, sizeof(this->ymm9));
-        memset(this->ymm10,   0x00, sizeof(this->ymm10));
-        memset(this->ymm11,   0x00, sizeof(this->ymm11));
-        memset(this->ymm12,   0x00, sizeof(this->ymm12));
-        memset(this->ymm13,   0x00, sizeof(this->ymm13));
-        memset(this->ymm14,   0x00, sizeof(this->ymm14));
-        memset(this->ymm15,   0x00, sizeof(this->ymm15));
-        memset(this->zmm0,    0x00, sizeof(this->zmm0));
-        memset(this->zmm1,    0x00, sizeof(this->zmm1));
-        memset(this->zmm2,    0x00, sizeof(this->zmm2));
-        memset(this->zmm3,    0x00, sizeof(this->zmm3));
-        memset(this->zmm4,    0x00, sizeof(this->zmm4));
-        memset(this->zmm5,    0x00, sizeof(this->zmm5));
-        memset(this->zmm6,    0x00, sizeof(this->zmm6));
-        memset(this->zmm7,    0x00, sizeof(this->zmm7));
-        memset(this->zmm8,    0x00, sizeof(this->zmm8));
-        memset(this->zmm9,    0x00, sizeof(this->zmm9));
-        memset(this->zmm10,   0x00, sizeof(this->zmm10));
-        memset(this->zmm11,   0x00, sizeof(this->zmm11));
-        memset(this->zmm12,   0x00, sizeof(this->zmm12));
-        memset(this->zmm13,   0x00, sizeof(this->zmm13));
-        memset(this->zmm14,   0x00, sizeof(this->zmm14));
-        memset(this->zmm15,   0x00, sizeof(this->zmm15));
-        memset(this->zmm16,   0x00, sizeof(this->zmm16));
-        memset(this->zmm17,   0x00, sizeof(this->zmm17));
-        memset(this->zmm18,   0x00, sizeof(this->zmm18));
-        memset(this->zmm19,   0x00, sizeof(this->zmm19));
-        memset(this->zmm20,   0x00, sizeof(this->zmm20));
-        memset(this->zmm21,   0x00, sizeof(this->zmm21));
-        memset(this->zmm22,   0x00, sizeof(this->zmm22));
-        memset(this->zmm23,   0x00, sizeof(this->zmm23));
-        memset(this->zmm24,   0x00, sizeof(this->zmm24));
-        memset(this->zmm25,   0x00, sizeof(this->zmm25));
-        memset(this->zmm26,   0x00, sizeof(this->zmm26));
-        memset(this->zmm27,   0x00, sizeof(this->zmm27));
-        memset(this->zmm28,   0x00, sizeof(this->zmm28));
-        memset(this->zmm29,   0x00, sizeof(this->zmm29));
-        memset(this->zmm30,   0x00, sizeof(this->zmm30));
-        memset(this->zmm31,   0x00, sizeof(this->zmm31));
-        memset(this->mxcsr,   0x00, sizeof(this->mxcsr));
-        memset(this->cr0,     0x00, sizeof(this->cr0));
-        memset(this->cr1,     0x00, sizeof(this->cr1));
-        memset(this->cr2,     0x00, sizeof(this->cr2));
-        memset(this->cr3,     0x00, sizeof(this->cr3));
-        memset(this->cr4,     0x00, sizeof(this->cr4));
-        memset(this->cr5,     0x00, sizeof(this->cr5));
-        memset(this->cr6,     0x00, sizeof(this->cr6));
-        memset(this->cr7,     0x00, sizeof(this->cr7));
-        memset(this->cr8,     0x00, sizeof(this->cr8));
-        memset(this->cr9,     0x00, sizeof(this->cr9));
-        memset(this->cr10,    0x00, sizeof(this->cr10));
-        memset(this->cr11,    0x00, sizeof(this->cr11));
-        memset(this->cr12,    0x00, sizeof(this->cr12));
-        memset(this->cr13,    0x00, sizeof(this->cr13));
-        memset(this->cr14,    0x00, sizeof(this->cr14));
-        memset(this->cr15,    0x00, sizeof(this->cr15));
-        memset(this->cs,      0x00, sizeof(this->cs));
-        memset(this->ds,      0x00, sizeof(this->ds));
-        memset(this->es,      0x00, sizeof(this->es));
-        memset(this->fs,      0x00, sizeof(this->fs));
-        memset(this->gs,      0x00, sizeof(this->gs));
-        memset(this->ss,      0x00, sizeof(this->ss));
+        std::memset(this->rax,     0x00, sizeof(this->rax));
+        std::memset(this->rbx,     0x00, sizeof(this->rbx));
+        std::memset(this->rcx,     0x00, sizeof(this->rcx));
+        std::memset(this->rdx,     0x00, sizeof(this->rdx));
+        std::memset(this->rdi,     0x00, sizeof(this->rdi));
+        std::memset(this->rsi,     0x00, sizeof(this->rsi));
+        std::memset(this->rsp,     0x00, sizeof(this->rsp));
+        std::memset(this->rbp,     0x00, sizeof(this->rbp));
+        std::memset(this->rip,     0x00, sizeof(this->rip));
+        std::memset(this->eflags,  0x00, sizeof(this->eflags));
+        std::memset(this->r8,      0x00, sizeof(this->r8));
+        std::memset(this->r9,      0x00, sizeof(this->r9));
+        std::memset(this->r10,     0x00, sizeof(this->r10));
+        std::memset(this->r11,     0x00, sizeof(this->r11));
+        std::memset(this->r12,     0x00, sizeof(this->r12));
+        std::memset(this->r13,     0x00, sizeof(this->r13));
+        std::memset(this->r14,     0x00, sizeof(this->r14));
+        std::memset(this->r15,     0x00, sizeof(this->r15));
+        std::memset(this->mm0,     0x00, sizeof(this->mm0));
+        std::memset(this->mm1,     0x00, sizeof(this->mm1));
+        std::memset(this->mm2,     0x00, sizeof(this->mm2));
+        std::memset(this->mm3,     0x00, sizeof(this->mm3));
+        std::memset(this->mm4,     0x00, sizeof(this->mm4));
+        std::memset(this->mm5,     0x00, sizeof(this->mm5));
+        std::memset(this->mm6,     0x00, sizeof(this->mm6));
+        std::memset(this->mm7,     0x00, sizeof(this->mm7));
+        std::memset(this->xmm0,    0x00, sizeof(this->xmm0));
+        std::memset(this->xmm1,    0x00, sizeof(this->xmm1));
+        std::memset(this->xmm2,    0x00, sizeof(this->xmm2));
+        std::memset(this->xmm3,    0x00, sizeof(this->xmm3));
+        std::memset(this->xmm4,    0x00, sizeof(this->xmm4));
+        std::memset(this->xmm5,    0x00, sizeof(this->xmm5));
+        std::memset(this->xmm6,    0x00, sizeof(this->xmm6));
+        std::memset(this->xmm7,    0x00, sizeof(this->xmm7));
+        std::memset(this->xmm8,    0x00, sizeof(this->xmm8));
+        std::memset(this->xmm9,    0x00, sizeof(this->xmm9));
+        std::memset(this->xmm10,   0x00, sizeof(this->xmm10));
+        std::memset(this->xmm11,   0x00, sizeof(this->xmm11));
+        std::memset(this->xmm12,   0x00, sizeof(this->xmm12));
+        std::memset(this->xmm13,   0x00, sizeof(this->xmm13));
+        std::memset(this->xmm14,   0x00, sizeof(this->xmm14));
+        std::memset(this->xmm15,   0x00, sizeof(this->xmm15));
+        std::memset(this->ymm0,    0x00, sizeof(this->ymm0));
+        std::memset(this->ymm1,    0x00, sizeof(this->ymm1));
+        std::memset(this->ymm2,    0x00, sizeof(this->ymm2));
+        std::memset(this->ymm3,    0x00, sizeof(this->ymm3));
+        std::memset(this->ymm4,    0x00, sizeof(this->ymm4));
+        std::memset(this->ymm5,    0x00, sizeof(this->ymm5));
+        std::memset(this->ymm6,    0x00, sizeof(this->ymm6));
+        std::memset(this->ymm7,    0x00, sizeof(this->ymm7));
+        std::memset(this->ymm8,    0x00, sizeof(this->ymm8));
+        std::memset(this->ymm9,    0x00, sizeof(this->ymm9));
+        std::memset(this->ymm10,   0x00, sizeof(this->ymm10));
+        std::memset(this->ymm11,   0x00, sizeof(this->ymm11));
+        std::memset(this->ymm12,   0x00, sizeof(this->ymm12));
+        std::memset(this->ymm13,   0x00, sizeof(this->ymm13));
+        std::memset(this->ymm14,   0x00, sizeof(this->ymm14));
+        std::memset(this->ymm15,   0x00, sizeof(this->ymm15));
+        std::memset(this->zmm0,    0x00, sizeof(this->zmm0));
+        std::memset(this->zmm1,    0x00, sizeof(this->zmm1));
+        std::memset(this->zmm2,    0x00, sizeof(this->zmm2));
+        std::memset(this->zmm3,    0x00, sizeof(this->zmm3));
+        std::memset(this->zmm4,    0x00, sizeof(this->zmm4));
+        std::memset(this->zmm5,    0x00, sizeof(this->zmm5));
+        std::memset(this->zmm6,    0x00, sizeof(this->zmm6));
+        std::memset(this->zmm7,    0x00, sizeof(this->zmm7));
+        std::memset(this->zmm8,    0x00, sizeof(this->zmm8));
+        std::memset(this->zmm9,    0x00, sizeof(this->zmm9));
+        std::memset(this->zmm10,   0x00, sizeof(this->zmm10));
+        std::memset(this->zmm11,   0x00, sizeof(this->zmm11));
+        std::memset(this->zmm12,   0x00, sizeof(this->zmm12));
+        std::memset(this->zmm13,   0x00, sizeof(this->zmm13));
+        std::memset(this->zmm14,   0x00, sizeof(this->zmm14));
+        std::memset(this->zmm15,   0x00, sizeof(this->zmm15));
+        std::memset(this->zmm16,   0x00, sizeof(this->zmm16));
+        std::memset(this->zmm17,   0x00, sizeof(this->zmm17));
+        std::memset(this->zmm18,   0x00, sizeof(this->zmm18));
+        std::memset(this->zmm19,   0x00, sizeof(this->zmm19));
+        std::memset(this->zmm20,   0x00, sizeof(this->zmm20));
+        std::memset(this->zmm21,   0x00, sizeof(this->zmm21));
+        std::memset(this->zmm22,   0x00, sizeof(this->zmm22));
+        std::memset(this->zmm23,   0x00, sizeof(this->zmm23));
+        std::memset(this->zmm24,   0x00, sizeof(this->zmm24));
+        std::memset(this->zmm25,   0x00, sizeof(this->zmm25));
+        std::memset(this->zmm26,   0x00, sizeof(this->zmm26));
+        std::memset(this->zmm27,   0x00, sizeof(this->zmm27));
+        std::memset(this->zmm28,   0x00, sizeof(this->zmm28));
+        std::memset(this->zmm29,   0x00, sizeof(this->zmm29));
+        std::memset(this->zmm30,   0x00, sizeof(this->zmm30));
+        std::memset(this->zmm31,   0x00, sizeof(this->zmm31));
+        std::memset(this->mxcsr,   0x00, sizeof(this->mxcsr));
+        std::memset(this->cr0,     0x00, sizeof(this->cr0));
+        std::memset(this->cr1,     0x00, sizeof(this->cr1));
+        std::memset(this->cr2,     0x00, sizeof(this->cr2));
+        std::memset(this->cr3,     0x00, sizeof(this->cr3));
+        std::memset(this->cr4,     0x00, sizeof(this->cr4));
+        std::memset(this->cr5,     0x00, sizeof(this->cr5));
+        std::memset(this->cr6,     0x00, sizeof(this->cr6));
+        std::memset(this->cr7,     0x00, sizeof(this->cr7));
+        std::memset(this->cr8,     0x00, sizeof(this->cr8));
+        std::memset(this->cr9,     0x00, sizeof(this->cr9));
+        std::memset(this->cr10,    0x00, sizeof(this->cr10));
+        std::memset(this->cr11,    0x00, sizeof(this->cr11));
+        std::memset(this->cr12,    0x00, sizeof(this->cr12));
+        std::memset(this->cr13,    0x00, sizeof(this->cr13));
+        std::memset(this->cr14,    0x00, sizeof(this->cr14));
+        std::memset(this->cr15,    0x00, sizeof(this->cr15));
+        std::memset(this->cs,      0x00, sizeof(this->cs));
+        std::memset(this->ds,      0x00, sizeof(this->ds));
+        std::memset(this->es,      0x00, sizeof(this->es));
+        std::memset(this->fs,      0x00, sizeof(this->fs));
+        std::memset(this->gs,      0x00, sizeof(this->gs));
+        std::memset(this->ss,      0x00, sizeof(this->ss));
       }
 
 
@@ -529,7 +513,15 @@ namespace triton {
 
 
       bool x8664Cpu::isRegister(triton::uint32 regId) const {
-        return (this->isGPR(regId) || this->isMMX(regId) || this->isSSE(regId) || this->isAVX256(regId) || this->isAVX512(regId) || this->isControl(regId) || this->isSegment(regId));
+        return (
+          this->isGPR(regId)      ||
+          this->isMMX(regId)      ||
+          this->isSSE(regId)      ||
+          this->isAVX256(regId)   ||
+          this->isAVX512(regId)   ||
+          this->isControl(regId)  ||
+          this->isSegment(regId)
+        );
       }
 
 
@@ -573,11 +565,6 @@ namespace triton {
       }
 
 
-      triton::uint32 x8664Cpu::invalidRegister(void) const {
-        return triton::arch::x86::ID_REG_INVALID;
-      }
-
-
       triton::uint32 x8664Cpu::numberOfRegisters(void) const {
         return triton::arch::x86::ID_REG_LAST_ITEM;
       }
@@ -593,8 +580,8 @@ namespace triton {
       }
 
 
-      std::tuple<std::string, triton::uint32, triton::uint32, triton::uint32> x8664Cpu::getRegisterInformation(triton::uint32 reg) const {
-        return triton::arch::x86::registerIdToRegisterInformation(reg);
+      triton::arch::RegisterSpecification x8664Cpu::getRegisterSpecification(triton::uint32 regId) const {
+        return this->getX86RegisterSpecification(triton::arch::ARCH_X86_64, regId);
       }
 
 
@@ -672,17 +659,24 @@ namespace triton {
 
             /* Init the disassembly */
             std::stringstream str;
-            str << insn[j].mnemonic << " " <<  insn[j].op_str;
+
+            /* Add mnemonic */
+            str << insn[j].mnemonic;
+
+            /* Add operands */
+            if (detail->x86.op_count)
+              str << " " <<  insn[j].op_str;
+
             inst.setDisassembly(str.str());
 
             /* Refine the size */
             inst.setSize(insn[j].size);
 
             /* Init the instruction's type */
-            inst.setType(triton::arch::x86::capstoneInstructionToTritonInstruction(insn[j].id));
+            inst.setType(this->capstoneInstructionToTritonInstruction(insn[j].id));
 
             /* Init the instruction's prefix */
-            inst.setPrefix(triton::arch::x86::capstonePrefixToTritonPrefix(detail->x86.prefix[0]));
+            inst.setPrefix(this->capstonePrefixToTritonPrefix(detail->x86.prefix[0]));
 
             /* Init operands */
             for (triton::uint32 n = 0; n < detail->x86.op_count; n++) {
@@ -694,18 +688,24 @@ namespace triton {
                   break;
 
                 case triton::extlibs::capstone::X86_OP_MEM: {
-                  triton::arch::MemoryAccess mem = inst.popMemoryAccess();
+                  triton::arch::MemoryAccess mem;
 
-                  /* Set the size if the memory is not valid */
-                  if (!mem.isValid())
-                    mem.setPair(std::make_pair(((op->size * BYTE_SIZE_BIT) - 1), 0));
+                  /* Set the size of the memory access */
+                  mem.setPair(std::make_pair(((op->size * BYTE_SIZE_BIT) - 1), 0));
 
                   /* LEA if exists */
-                  triton::arch::Register segment(triton::arch::x86::capstoneRegisterToTritonRegister(op->mem.segment));
-                  triton::arch::Register base(triton::arch::x86::capstoneRegisterToTritonRegister(op->mem.base));
-                  triton::arch::Register index(triton::arch::x86::capstoneRegisterToTritonRegister(op->mem.index));
-                  triton::arch::Immediate disp(op->mem.disp, base.isValid() ? base.getSize() : index.isValid() ? index.getSize() : op->size);
-                  triton::arch::Immediate scale(op->mem.scale, base.isValid() ? base.getSize() : index.isValid() ? index.getSize() : op->size);
+                  triton::arch::Register segment(this->capstoneRegisterToTritonRegister(op->mem.segment));
+                  triton::arch::Register base(this->capstoneRegisterToTritonRegister(op->mem.base));
+                  triton::arch::Register index(this->capstoneRegisterToTritonRegister(op->mem.index));
+
+                  triton::uint32 immsize = (
+                                            this->isRegisterValid(base.getId()) ? base.getSize() :
+                                            this->isRegisterValid(index.getId()) ? index.getSize() :
+                                            this->registerSize()
+                                          );
+
+                  triton::arch::Immediate disp(op->mem.disp, immsize);
+                  triton::arch::Immediate scale(op->mem.scale, immsize);
 
                   /* Specify that LEA contains a PC relative */
                   if (base.getId() == TRITON_X86_REG_PC.getId())
@@ -722,7 +722,7 @@ namespace triton {
                 }
 
                 case triton::extlibs::capstone::X86_OP_REG:
-                  inst.operands.push_back(triton::arch::OperandWrapper(inst.getRegisterState(triton::arch::x86::capstoneRegisterToTritonRegister(op->reg))));
+                  inst.operands.push_back(triton::arch::OperandWrapper(inst.getRegisterState(this->capstoneRegisterToTritonRegister(op->reg))));
                   break;
 
                 default:
@@ -753,30 +753,23 @@ namespace triton {
       }
 
 
-      void x8664Cpu::buildSemantics(triton::arch::Instruction& inst) const {
-        if (!inst.getType())
-          throw triton::exceptions::Cpu("x8664Cpu::buildSemantics(): You must disassemble the instruction before.");
-        triton::arch::x86::semantics::build(inst);
-      }
-
-
       triton::uint8 x8664Cpu::getConcreteMemoryValue(triton::uint64 addr) const {
-        triton::api.processCallbacks(triton::callbacks::MEMORY_HIT, addr);
-
         if (this->memory.find(addr) == this->memory.end())
           return 0x00;
-
         return this->memory.at(addr);
       }
 
 
-      triton::uint512 x8664Cpu::getConcreteMemoryValue(const triton::arch::MemoryAccess& mem) const {
+      triton::uint512 x8664Cpu::getConcreteMemoryValue(const triton::arch::MemoryAccess& mem, bool execCallbacks) const {
         triton::uint512 ret = 0;
         triton::uint64 addr = mem.getAddress();
         triton::uint32 size = mem.getSize();
 
         if (size == 0 || size > DQQWORD_SIZE)
           throw triton::exceptions::Cpu("x8664Cpu::getConcreteMemoryValue(): Invalid size memory.");
+
+        if (execCallbacks && this->callbacks)
+          this->callbacks->processCallbacks(triton::callbacks::GET_CONCRETE_MEMORY_VALUE, mem);
 
         for (triton::sint32 i = size-1; i >= 0; i--)
           ret = ((ret << BYTE_SIZE_BIT) | this->getConcreteMemoryValue(addr+i));
@@ -785,18 +778,25 @@ namespace triton {
       }
 
 
-      std::vector<triton::uint8> x8664Cpu::getConcreteMemoryAreaValue(triton::uint64 baseAddr, triton::usize size) const {
+      std::vector<triton::uint8> x8664Cpu::getConcreteMemoryAreaValue(triton::uint64 baseAddr, triton::usize size, bool execCallbacks) const {
         std::vector<triton::uint8> area;
 
-        for (triton::usize index = 0; index < size; index++)
+        for (triton::usize index = 0; index < size; index++) {
+          if (execCallbacks && this->callbacks)
+            this->callbacks->processCallbacks(triton::callbacks::GET_CONCRETE_MEMORY_VALUE, MemoryAccess(baseAddr+index, BYTE_SIZE));
           area.push_back(this->getConcreteMemoryValue(baseAddr+index));
+        }
 
         return area;
       }
 
 
-      triton::uint512 x8664Cpu::getConcreteRegisterValue(const triton::arch::Register& reg) const {
+      triton::uint512 x8664Cpu::getConcreteRegisterValue(const triton::arch::Register& reg, bool execCallbacks) const {
         triton::uint512 value = 0;
+
+        if (execCallbacks && this->callbacks)
+          this->callbacks->processCallbacks(triton::callbacks::GET_CONCRETE_REGISTER_VALUE, reg);
+
         switch (reg.getId()) {
           case triton::arch::x86::ID_REG_RAX: return (*((triton::uint64*)(this->rax)));
           case triton::arch::x86::ID_REG_EAX: return (*((triton::uint32*)(this->rax)));
@@ -1115,47 +1115,47 @@ namespace triton {
 
           case triton::arch::x86::ID_REG_CF: {
             triton::uint64 b = (*((triton::uint64*)(this->eflags)));
-            (*((triton::uint64*)(this->eflags))) = value.convert_to<bool>() ? b | (1 << 0) : b & ~(1 << 0);
+            (*((triton::uint64*)(this->eflags))) = !value.is_zero() ? b | (1 << 0) : b & ~(1 << 0);
             break;
           }
           case triton::arch::x86::ID_REG_PF: {
             triton::uint64 b = (*((triton::uint64*)(this->eflags)));
-            (*((triton::uint64*)(this->eflags))) = value.convert_to<bool>() ? b | (1 << 2) : b & ~(1 << 2);
+            (*((triton::uint64*)(this->eflags))) = !value.is_zero() ? b | (1 << 2) : b & ~(1 << 2);
             break;
           }
           case triton::arch::x86::ID_REG_AF: {
             triton::uint64 b = (*((triton::uint64*)(this->eflags)));
-            (*((triton::uint64*)(this->eflags))) = value.convert_to<bool>() ? b | (1 << 4) : b & ~(1 << 4);
+            (*((triton::uint64*)(this->eflags))) = !value.is_zero() ? b | (1 << 4) : b & ~(1 << 4);
             break;
           }
           case triton::arch::x86::ID_REG_ZF: {
             triton::uint64 b = (*((triton::uint64*)(this->eflags)));
-            (*((triton::uint64*)(this->eflags))) = value.convert_to<bool>() ? b | (1 << 6) : b & ~(1 << 6);
+            (*((triton::uint64*)(this->eflags))) = !value.is_zero() ? b | (1 << 6) : b & ~(1 << 6);
             break;
           }
           case triton::arch::x86::ID_REG_SF: {
             triton::uint64 b = (*((triton::uint64*)(this->eflags)));
-            (*((triton::uint64*)(this->eflags))) = value.convert_to<bool>() ? b | (1 << 7) : b & ~(1 << 7);
+            (*((triton::uint64*)(this->eflags))) = !value.is_zero() ? b | (1 << 7) : b & ~(1 << 7);
             break;
           }
           case triton::arch::x86::ID_REG_TF: {
             triton::uint64 b = (*((triton::uint64*)(this->eflags)));
-            (*((triton::uint64*)(this->eflags))) = value.convert_to<bool>() ? b | (1 << 8) : b & ~(1 << 8);
+            (*((triton::uint64*)(this->eflags))) = !value.is_zero() ? b | (1 << 8) : b & ~(1 << 8);
             break;
           }
           case triton::arch::x86::ID_REG_IF: {
             triton::uint64 b = (*((triton::uint64*)(this->eflags)));
-            (*((triton::uint64*)(this->eflags))) = value.convert_to<bool>() ? b | (1 << 9) : b & ~(1 << 9);
+            (*((triton::uint64*)(this->eflags))) = !value.is_zero() ? b | (1 << 9) : b & ~(1 << 9);
             break;
           }
           case triton::arch::x86::ID_REG_DF: {
             triton::uint64 b = (*((triton::uint64*)(this->eflags)));
-            (*((triton::uint64*)(this->eflags))) = value.convert_to<bool>() ? b | (1 << 10) : b & ~(1 << 10);
+            (*((triton::uint64*)(this->eflags))) = !value.is_zero() ? b | (1 << 10) : b & ~(1 << 10);
             break;
           }
           case triton::arch::x86::ID_REG_OF: {
             triton::uint64 b = (*((triton::uint64*)(this->eflags)));
-            (*((triton::uint64*)(this->eflags))) = value.convert_to<bool>() ? b | (1 << 11) : b & ~(1 << 11);
+            (*((triton::uint64*)(this->eflags))) = !value.is_zero() ? b | (1 << 11) : b & ~(1 << 11);
             break;
           }
 
@@ -1279,82 +1279,82 @@ namespace triton {
 
           case triton::arch::x86::ID_REG_IE: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 0) : b & ~(1 << 0);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 0) : b & ~(1 << 0);
             break;
           }
           case triton::arch::x86::ID_REG_DE: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 1) : b & ~(1 << 1);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 1) : b & ~(1 << 1);
             break;
           }
           case triton::arch::x86::ID_REG_ZE: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 2) : b & ~(1 << 2);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 2) : b & ~(1 << 2);
             break;
           }
           case triton::arch::x86::ID_REG_OE: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 3) : b & ~(1 << 3);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 3) : b & ~(1 << 3);
             break;
           }
           case triton::arch::x86::ID_REG_UE: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 4) : b & ~(1 << 4);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 4) : b & ~(1 << 4);
             break;
           }
           case triton::arch::x86::ID_REG_PE: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 5) : b & ~(1 << 5);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 5) : b & ~(1 << 5);
             break;
           }
           case triton::arch::x86::ID_REG_DAZ: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 6) : b & ~(1 << 6);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 6) : b & ~(1 << 6);
             break;
           }
           case triton::arch::x86::ID_REG_IM: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 7) : b & ~(1 << 7);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 7) : b & ~(1 << 7);
             break;
           }
           case triton::arch::x86::ID_REG_DM: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 8) : b & ~(1 << 8);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 8) : b & ~(1 << 8);
             break;
           }
           case triton::arch::x86::ID_REG_ZM: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 9) : b & ~(1 << 9);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 9) : b & ~(1 << 9);
             break;
           }
           case triton::arch::x86::ID_REG_OM: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 10) : b & ~(1 << 10);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 10) : b & ~(1 << 10);
             break;
           }
           case triton::arch::x86::ID_REG_UM: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 11) : b & ~(1 << 11);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 11) : b & ~(1 << 11);
             break;
           }
           case triton::arch::x86::ID_REG_PM: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 12) : b & ~(1 << 12);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 12) : b & ~(1 << 12);
             break;
           }
           case triton::arch::x86::ID_REG_RL: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 13) : b & ~(1 << 13);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 13) : b & ~(1 << 13);
             break;
           }
           case triton::arch::x86::ID_REG_RH: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 14) : b & ~(1 << 14);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 14) : b & ~(1 << 14);
             break;
           }
           case triton::arch::x86::ID_REG_FZ: {
             triton::uint64 b = (*((triton::uint64*)(this->mxcsr)));
-            (*((triton::uint64*)(this->mxcsr))) = value.convert_to<bool>() ? b | (1 << 15) : b & ~(1 << 15);
+            (*((triton::uint64*)(this->mxcsr))) = !value.is_zero() ? b | (1 << 15) : b & ~(1 << 15);
             break;
           }
 

@@ -7,10 +7,9 @@
 
 #include <cstring>
 
-#include <api.hpp>
-#include <exceptions.hpp>
-#include <immediate.hpp>
-#include <instruction.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/immediate.hpp>
+#include <triton/instruction.hpp>
 
 
 
@@ -22,11 +21,18 @@ namespace triton {
       this->branch          = false;
       this->conditionTaken  = false;
       this->controlFlow     = false;
-      this->size            = 0;
       this->prefix          = 0;
+      this->size            = 0;
+      this->tainted         = false;
       this->tid             = 0;
       this->type            = 0;
+
       std::memset(this->opcodes, 0x00, sizeof(this->opcodes));
+    }
+
+
+    Instruction::Instruction(const triton::uint8* opcodes, triton::uint32 opSize) : Instruction::Instruction() {
+      this->setOpcodes(opcodes, opSize);
     }
 
 
@@ -53,12 +59,15 @@ namespace triton {
       this->memoryAccess        = other.memoryAccess;
       this->operands            = other.operands;
       this->prefix              = other.prefix;
+      this->readRegisters       = other.readRegisters;
       this->registerState       = other.registerState;
       this->size                = other.size;
       this->storeAccess         = other.storeAccess;
       this->symbolicExpressions = other.symbolicExpressions;
+      this->tainted             = other.tainted;
       this->tid                 = other.tid;
       this->type                = other.type;
+      this->writtenRegisters    = other.writtenRegisters;
 
       std::memcpy(this->opcodes, other.opcodes, sizeof(this->opcodes));
 
@@ -102,7 +111,7 @@ namespace triton {
     }
 
 
-    void Instruction::setOpcodes(triton::uint8* opcodes, triton::uint32 size) {
+    void Instruction::setOpcodes(const triton::uint8* opcodes, triton::uint32 size) {
       if (size >= sizeof(this->opcodes))
        throw triton::exceptions::Instruction("Instruction::setOpcodes(): Invalid size (too big).");
       std::memcpy(this->opcodes, opcodes, size);
@@ -125,52 +134,33 @@ namespace triton {
     }
 
 
-    const std::set<std::pair<triton::arch::MemoryAccess, triton::ast::AbstractNode*>>& Instruction::getLoadAccess(void) const {
+    std::set<std::pair<triton::arch::MemoryAccess, triton::ast::AbstractNode*>>& Instruction::getLoadAccess(void) {
       return this->loadAccess;
     }
 
 
-    const std::set<std::pair<triton::arch::MemoryAccess, triton::ast::AbstractNode*>>& Instruction::getStoreAccess(void) const {
+    std::set<std::pair<triton::arch::MemoryAccess, triton::ast::AbstractNode*>>& Instruction::getStoreAccess(void) {
       return this->storeAccess;
     }
 
 
-    const std::set<std::pair<triton::arch::Register, triton::ast::AbstractNode*>>& Instruction::getReadRegisters(void) const {
+    std::set<std::pair<triton::arch::Register, triton::ast::AbstractNode*>>& Instruction::getReadRegisters(void) {
       return this->readRegisters;
     }
 
 
-    const std::set<std::pair<triton::arch::Register, triton::ast::AbstractNode*>>& Instruction::getWrittenRegisters(void) const {
+    std::set<std::pair<triton::arch::Register, triton::ast::AbstractNode*>>& Instruction::getWrittenRegisters(void) {
       return this->writtenRegisters;
     }
 
 
-    const std::set<std::pair<triton::arch::Immediate, triton::ast::AbstractNode*>>& Instruction::getReadImmediates(void) const {
+    std::set<std::pair<triton::arch::Immediate, triton::ast::AbstractNode*>>& Instruction::getReadImmediates(void) {
       return this->readImmediates;
     }
 
 
     void Instruction::updateContext(const triton::arch::MemoryAccess& mem) {
       this->memoryAccess.push_back(mem);
-    }
-
-
-    triton::arch::MemoryAccess Instruction::popMemoryAccess(triton::uint64 addr, triton::uint32 size, triton::uint512 value) {
-      /* The default value is zero */
-      triton::arch::MemoryAccess mem;
-
-      /* If there is a default value specified, we use it */
-      if (size)
-        mem = triton::arch::MemoryAccess(addr, size, value);
-
-      /* If there is a memory access recorded, we use it */
-      if (this->memoryAccess.size() > 0) {
-        mem = this->memoryAccess.front();
-        triton::api.setConcreteMemoryValue(mem);
-        this->memoryAccess.pop_front();
-      }
-
-      return mem;
     }
 
 
@@ -188,8 +178,32 @@ namespace triton {
     }
 
 
+    void Instruction::removeLoadAccess(const triton::arch::MemoryAccess& mem) {
+      auto it = this->loadAccess.begin();
+
+      while (it != this->loadAccess.end()) {
+        if (it->first.getAddress() == mem.getAddress())
+          it = this->loadAccess.erase(it);
+        else
+          ++it;
+      }
+    }
+
+
     void Instruction::setStoreAccess(const triton::arch::MemoryAccess& mem, triton::ast::AbstractNode* node) {
       this->storeAccess.insert(std::make_pair(mem, node));
+    }
+
+
+    void Instruction::removeStoreAccess(const triton::arch::MemoryAccess& mem) {
+      auto it = this->storeAccess.begin();
+
+      while (it != this->storeAccess.end()) {
+        if (it->first.getAddress() == mem.getAddress())
+          it = this->storeAccess.erase(it);
+        else
+          ++it;
+      }
     }
 
 
@@ -198,13 +212,49 @@ namespace triton {
     }
 
 
+    void Instruction::removeReadRegister(const triton::arch::Register& reg) {
+      auto it = this->readRegisters.begin();
+
+      while (it != this->readRegisters.end()) {
+        if (it->first.getId() == reg.getId())
+          it = this->readRegisters.erase(it);
+        else
+          ++it;
+      }
+    }
+
+
     void Instruction::setWrittenRegister(const triton::arch::Register& reg, triton::ast::AbstractNode* node) {
       this->writtenRegisters.insert(std::make_pair(reg, node));
     }
 
 
+    void Instruction::removeWrittenRegister(const triton::arch::Register& reg) {
+      auto it = this->writtenRegisters.begin();
+
+      while (it != this->writtenRegisters.end()) {
+        if (it->first.getId() == reg.getId())
+          it = this->writtenRegisters.erase(it);
+        else
+          ++it;
+      }
+    }
+
+
     void Instruction::setReadImmediate(const triton::arch::Immediate& imm, triton::ast::AbstractNode* node) {
       this->readImmediates.insert(std::make_pair(imm, node));
+    }
+
+
+    void Instruction::removeReadImmediate(const triton::arch::Immediate& imm) {
+      auto it = this->readImmediates.begin();
+
+      while (it != this->readImmediates.end()) {
+        if (it->first.getValue() == imm.getValue())
+          it = this->readImmediates.erase(it);
+        else
+          ++it;
+      }
     }
 
 
@@ -226,6 +276,22 @@ namespace triton {
     void Instruction::setDisassembly(const std::string& str) {
       this->disassembly.clear();
       this->disassembly.str(str);
+    }
+
+
+    void Instruction::setTaint(bool state) {
+      this->tainted = state;
+    }
+
+
+    void Instruction::setTaint(void) {
+      std::vector<triton::engines::symbolic::SymbolicExpression*>::const_iterator it;
+      for (it = this->symbolicExpressions.begin(); it != this->symbolicExpressions.end(); it++) {
+        if ((*it)->isTainted == true) {
+          this->tainted = true;
+          break;
+        }
+      }
     }
 
 
@@ -257,12 +323,7 @@ namespace triton {
 
 
     bool Instruction::isTainted(void) const {
-      std::vector<triton::engines::symbolic::SymbolicExpression*>::const_iterator it;
-      for (it = this->symbolicExpressions.begin(); it != this->symbolicExpressions.end(); it++) {
-        if ((*it)->isTainted == true)
-          return true;
-      }
-      return false;
+      return this->tainted;
     }
 
 
@@ -290,6 +351,78 @@ namespace triton {
     }
 
 
+    bool Instruction::isReadFrom(const triton::arch::OperandWrapper& target) const {
+      switch(target.getType()) {
+
+        case triton::arch::OP_IMM:
+          for (auto&& pair : this->readImmediates) {
+            if (pair.first == target.getConstImmediate())
+              return true;
+          }
+          break;
+
+        case triton::arch::OP_MEM:
+          for (auto&& pair : this->loadAccess) {
+            const triton::arch::MemoryAccess& m1 = pair.first;
+            const triton::arch::MemoryAccess& m2 = target.getConstMemory();
+
+            if (m1.isOverlapWith(m2))
+              return true;
+          }
+          break;
+
+        case triton::arch::OP_REG:
+          for (auto&& pair : this->readRegisters) {
+            const triton::arch::Register& r1 = pair.first;
+            const triton::arch::Register& r2 = target.getConstRegister();
+
+            if (r1.isOverlapWith(r2))
+              return true;
+          }
+          break;
+
+        default:
+          throw triton::exceptions::Instruction("Instruction::isReadFrom(): Invalid type operand.");
+      }
+
+      return false;
+    }
+
+
+    bool Instruction::isWriteTo(const triton::arch::OperandWrapper& target) const {
+      switch(target.getType()) {
+
+        case triton::arch::OP_IMM:
+          break;
+
+        case triton::arch::OP_MEM:
+          for (auto&& pair : this->storeAccess) {
+            const triton::arch::MemoryAccess& m1 = pair.first;
+            const triton::arch::MemoryAccess& m2 = target.getConstMemory();
+
+            if (m1.isOverlapWith(m2))
+              return true;
+          }
+          break;
+
+        case triton::arch::OP_REG:
+          for (auto&& pair : this->writtenRegisters) {
+            const triton::arch::Register& r1 = pair.first;
+            const triton::arch::Register& r2 = target.getConstRegister();
+
+            if (r1.isOverlapWith(r2))
+              return true;
+          }
+          break;
+
+        default:
+          throw triton::exceptions::Instruction("Instruction::isWriteTo(): Invalid type operand.");
+      }
+
+      return false;
+    }
+
+
     bool Instruction::isPrefixed(void) const {
       if (this->prefix)
         return true;
@@ -312,19 +445,6 @@ namespace triton {
     }
 
 
-    void Instruction::preIRInit(void) {
-      /* Clear previous expressions if exist */
-      this->symbolicExpressions.clear();
-    }
-
-
-    void Instruction::postIRInit(void) {
-      /* Clear unused data */
-      this->memoryAccess.clear();
-      this->registerState.clear();
-    }
-
-
     void Instruction::reset(void) {
       this->partialReset();
       this->memoryAccess.clear();
@@ -338,6 +458,7 @@ namespace triton {
       this->conditionTaken  = false;
       this->controlFlow     = false;
       this->size            = 0;
+      this->tainted         = false;
       this->tid             = 0;
       this->type            = 0;
 
@@ -355,7 +476,7 @@ namespace triton {
 
 
     std::ostream& operator<<(std::ostream& stream, const Instruction& inst) {
-      stream << std::hex << inst.getAddress() << ": " << inst.getDisassembly() << std::dec;
+      stream << "0x" << std::hex << inst.getAddress() << ": " << inst.getDisassembly() << std::dec;
       return stream;
     }
 
